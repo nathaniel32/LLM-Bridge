@@ -8,8 +8,8 @@ class ConnectionManager:
         self.client_sessions: List[ClientConnection] = []
         self.worker_sessions: List[WorkerConnection] = []
         self.waiting_clients: List[ClientConnection] = []
-        self._client_lock = asyncio.Lock()  # Lock for client operations
-        self._worker_lock = asyncio.Lock()    # Lock for worker operations
+        self._client_lock = asyncio.Lock()
+        self._worker_lock = asyncio.Lock()
         self._dispatch_lock = asyncio.Lock()
 
     # send to all clients
