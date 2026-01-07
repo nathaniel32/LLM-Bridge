@@ -13,7 +13,7 @@ class ConnectionManager:
         self._dispatch_lock = asyncio.Lock()
 
     # send to all clients
-    async def _broadcast_system_info(self):
+    async def _broadcast(self):
         async with self._client_lock:
             clients = self.client_sessions.copy()
         
@@ -37,7 +37,7 @@ class ConnectionManager:
                 self.client_sessions.remove(session)
                 print("Client session removed: ", len(self.client_sessions))
         
-        await self._broadcast_system_info()
+        await self._broadcast()
 
     async def add_worker_session(self) -> WorkerConnection:
         async with self._worker_lock:
@@ -45,7 +45,7 @@ class ConnectionManager:
             self.worker_sessions.append(session)
             print("Active worker session: ", len(self.worker_sessions))
         
-        await self._broadcast_system_info()
+        await self._broadcast()
         return session
 
     async def remove_worker_session(self, session: WorkerConnection):
@@ -54,4 +54,4 @@ class ConnectionManager:
                 self.worker_sessions.remove(session)
                 print("Worker session removed: ", len(self.worker_sessions))
         
-        await self._broadcast_system_info()
+        await self._broadcast()
