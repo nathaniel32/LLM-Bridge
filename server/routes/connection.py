@@ -9,6 +9,11 @@ class Connection:
         self.router = APIRouter(prefix="/connection", tags=["Connection"])
         self.connection_manager = ConnectionManager()
 
+    async def client_ws_endpoint(self, websocket: WebSocket):
+        await websocket.accept()
+        session = await self.connection_manager.add_client_session()
+        await session.bind(websocket)
+
     async def worker_ws_endpoint(self, websocket: WebSocket):
         await websocket.accept()
         key = websocket.cookies.get("access_key")
@@ -18,5 +23,5 @@ class Connection:
             await websocket.close(code=status.WS_1008_POLICY_VIOLATION)
             return
         
-        session = await self.connection_manager.get_set_worker_session(websocket)
+        session = await self.connection_manager.add_worker_session(websocket)
         await session.bind()
