@@ -1,5 +1,5 @@
-from handler.client_connection import ClientConnection
-from handler.worker_connection import WorkerConnection
+from server.handler.client_connection import ClientConnection
+from server.handler.worker_connection import WorkerConnection
 from typing import List
 import asyncio
 

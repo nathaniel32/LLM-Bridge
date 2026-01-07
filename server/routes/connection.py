@@ -1,8 +1,8 @@
 from fastapi import APIRouter, WebSocket, status
 from common.models import StatusType, ServerWorkerActionType
 from common.utils import config
-from utils import ws_response
-from handler.connection_manager import ConnectionManager
+from server.utils import ws_response
+from server.handler.connection_manager import ConnectionManager
 
 class Connection:
     def __init__(self):
