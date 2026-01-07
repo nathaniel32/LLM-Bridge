@@ -14,7 +14,7 @@ class Worker:
         self.url = url
 
     async def connect(self):
-        print(self.url)
+        logging.info(self.url)
 
 def parse_args():
     parser = argparse.ArgumentParser(description="Worker")
