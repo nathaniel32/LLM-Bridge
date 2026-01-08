@@ -2,6 +2,7 @@ from server.handler.group_manager import GroupManager
 from server.handler.worker_connection import WorkerConnection
 from typing import List
 import asyncio
+from common.models import StatusType
 
 class ConnectionManager:
     def __init__(self):
@@ -20,6 +21,26 @@ class ConnectionManager:
         # Lockless broadcast (avoids deadlock)
         for group in groups:
             print(group)
+
+    async def dequeue_job(self):
+        async with self._dispatch_lock:
+            if self.waiting_groups:
+                for worker_connection in self.worker_connections:
+                    if worker_connection.job_event is None:
+                        group_manager = self.waiting_groups.pop(0)
+                        group_manager.worker_connection = worker_connection
+                        asyncio.create_task(group_manager.start_process())
+                        return
+                print(f"No WORKER FREE | waiting list : {len(self.waiting_groups)}")
+
+    async def enqueue_job(self, group_manager:GroupManager):
+        async with self._dispatch_lock:
+            if group_manager not in self.waiting_groups:
+                self.waiting_groups.append(group_manager)
+                await self._notify_queue_position()
+            else:
+                await group_manager.send(message=f"already in waiting list at position {self.waiting_groups.index(group_manager) + 1}", status_type=StatusType.WARNING)
+        await self.dequeue_job()
 
     # add group manager
     async def add_group_manager(self) -> GroupManager:

@@ -1,16 +1,18 @@
 import json
 from fastapi import WebSocket, WebSocketDisconnect
-from typing import TYPE_CHECKING, List
+from typing import TYPE_CHECKING, List, Optional
 from common.models import ClientServerActionType, ServerClientActionType, StatusType
 from server.utils import ws_response
 import logging
 if TYPE_CHECKING:
     from server.handler.connection_manager import ConnectionManager
+    from server.handler.worker_connection import WorkerConnection
 
 class GroupManager:
     def __init__(self, connection_manager:"ConnectionManager"):
         self.connection_manager = connection_manager
         self.client_connections: List[WebSocket] = []
+        self.worker_connection: Optional["WorkerConnection"] = None
 
     async def send(self, message=None, message_status=StatusType.INFO, content=None, action=ServerClientActionType.LOG, connections=None):
         print(message)
@@ -43,6 +45,9 @@ class GroupManager:
             logging.exception("Unexpected error in websocket listener")
         finally:
             logging.info("END!")
+
+    async def start_process():
+        print("START")
 
     async def bind(self, websocket:WebSocket):
         self.client_connections.append(websocket)
