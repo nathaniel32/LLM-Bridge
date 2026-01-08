@@ -5,8 +5,8 @@ import asyncio
 
 class ConnectionManager:
     def __init__(self):
-        self.group_sessions: List[GroupConnection] = []
-        self.worker_sessions: List[WorkerConnection] = []
+        self.group_connections: List[GroupConnection] = []
+        self.worker_connections: List[WorkerConnection] = []
         self.waiting_groups: List[GroupConnection] = []
         self._group_lock = asyncio.Lock()
         self._worker_lock = asyncio.Lock()
@@ -15,43 +15,43 @@ class ConnectionManager:
     # send to all groups
     async def _broadcast(self):
         async with self._group_lock:
-            groups = self.group_sessions.copy()
+            groups = self.group_connections.copy()
         
         # Lockless broadcast (avoids deadlock)
-        for group_session in groups:
-            print(group_session)
+        for group_connection in groups:
+            print(group_connection)
 
-    # add group session
-    async def add_group_session(self) -> GroupConnection:
+    # add group connection
+    async def add_group_connection(self) -> GroupConnection:
         async with self._group_lock:
-            session = GroupConnection(self)
-            self.group_sessions.append(session)
-            print("Active Group session: ", len(self.group_sessions))
+            connection = GroupConnection(self)
+            self.group_connections.append(connection)
+            print("Active Group connection: ", len(self.group_connections))
         
-        return session
+        return connection
     
-    # remove group session
-    async def remove_group_session(self, session: GroupConnection):
+    # remove group connection
+    async def remove_group_connection(self, connection: GroupConnection):
         async with self._group_lock:
-            if session in self.group_sessions:
-                self.group_sessions.remove(session)
-                print("Group session removed: ", len(self.group_sessions))
+            if connection in self.group_connections:
+                self.group_connections.remove(connection)
+                print("Group connection removed: ", len(self.group_connections))
         
         await self._broadcast()
 
-    async def add_worker_session(self) -> WorkerConnection:
+    async def add_worker_connection(self) -> WorkerConnection:
         async with self._worker_lock:
-            session = WorkerConnection(self)
-            self.worker_sessions.append(session)
-            print("Active worker session: ", len(self.worker_sessions))
+            connection = WorkerConnection(self)
+            self.worker_connections.append(connection)
+            print("Active worker connection: ", len(self.worker_connections))
         
         await self._broadcast()
-        return session
+        return connection
 
-    async def remove_worker_session(self, session: WorkerConnection):
+    async def remove_worker_connection(self, connection: WorkerConnection):
         async with self._worker_lock:
-            if session in self.worker_sessions:
-                self.worker_sessions.remove(session)
-                print("Worker session removed: ", len(self.worker_sessions))
+            if connection in self.worker_connections:
+                self.worker_connections.remove(connection)
+                print("Worker connection removed: ", len(self.worker_connections))
         
         await self._broadcast()

@@ -6,7 +6,7 @@ if TYPE_CHECKING:
 class GroupConnection:
     def __init__(self, connection_manager:"ConnectionManager"):
         self.connection_manager = connection_manager
-        self.client_sessions: List[WebSocket] = []
+        self.client_connections: List[WebSocket] = []
 
-    async def bind(self):
-        pass
+    async def bind(self, websocket:WebSocket):
+        self.client_connections.append(websocket)

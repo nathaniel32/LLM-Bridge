@@ -13,8 +13,8 @@ class Connection:
 
     async def client_endpoint(self, websocket: WebSocket):
         await websocket.accept()
-        session = await self.connection_manager.add_client_session()
-        await session.bind()
+        connection = await self.connection_manager.add_group_connection()
+        await connection.bind(websocket)
 
     async def worker_endpoint(self, websocket: WebSocket):
         await websocket.accept()
@@ -25,5 +25,5 @@ class Connection:
             await websocket.close(code=status.WS_1008_POLICY_VIOLATION)
             return
         
-        session = await self.connection_manager.add_worker_session()
-        await session.bind()
+        connection = await self.connection_manager.add_worker_connection()
+        await connection.bind()
