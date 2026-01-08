@@ -39,9 +39,9 @@ class ConnectionManager:
         
         await self._broadcast()
 
-    async def add_worker_connection(self) -> WorkerConnection:
+    async def add_worker_connection(self, websocket) -> WorkerConnection:
         async with self._worker_lock:
-            connection = WorkerConnection(self)
+            connection = WorkerConnection(self, websocket)
             self.worker_connections.append(connection)
             print("Active worker connection: ", len(self.worker_connections))
         

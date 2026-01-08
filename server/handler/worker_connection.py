@@ -7,13 +7,14 @@ if TYPE_CHECKING:
     from server.handler.connection_manager import ConnectionManager
 
 class WorkerConnection:
-    def __init__(self, connection_manager:"ConnectionManager"):
+    def __init__(self, connection_manager:"ConnectionManager", connection: WebSocket):
         self.connection_manager = connection_manager
+        self.connection = connection
 
-    async def _message_listener(self, websocket:WebSocket):
+    async def _message_listener(self):
         try:
             while True:
-                message = await websocket.receive()
+                message = await self.connection.receive()
 
                 if message.get("text"):
                     try:

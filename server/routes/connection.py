@@ -25,5 +25,5 @@ class Connection:
             await websocket.close(code=status.WS_1008_POLICY_VIOLATION)
             return
         
-        connection = await self.connection_manager.add_worker_connection()
+        connection = await self.connection_manager.add_worker_connection(websocket)
         await connection.bind()
