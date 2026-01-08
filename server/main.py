@@ -1,6 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from server.routes.connection import Connection
+from server.routes.frontend import Frontend
 from common.utils import config
 import logging
 
@@ -15,6 +16,7 @@ class App:
         self.app = FastAPI()
         self.setup_middleware()
         self.app.include_router(Connection().router)
+        self.app.include_router(Frontend().router)
 
     def setup_middleware(self):
         self.app.add_middleware(
