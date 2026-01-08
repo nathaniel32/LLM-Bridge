@@ -38,8 +38,8 @@ class GroupManager:
                                 await self.send(content=ClientContent(job_status=self.status))
                             case _:
                                 await self.send(message="Unknown action", message_status=StatusType.ERROR)
-                    except Exception:
-                        await self.send(message=message.get("text"))
+                    except Exception as e:
+                        await self.send(message=str(e), message_status=StatusType.ERROR)
 
         except WebSocketDisconnect:
             logging.info("WebSocket disconnected")
@@ -48,7 +48,7 @@ class GroupManager:
         finally:
             logging.info("END!")
 
-    async def start_process():
+    async def start_process(self):
         print("START")
 
     async def bind(self, websocket:WebSocket):

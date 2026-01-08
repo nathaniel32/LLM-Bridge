@@ -9,7 +9,7 @@ async def ws_response(
     message_status=None,
     content=None
 ) -> dict:
-    message_model = MessageModel(text=message, status=message_status)
+    message_model = None if message is None else MessageModel(text=message, status=message_status)
     response = ResponseModel(action=action, message=message_model, content=content)
     #print(response.content)
     for websocket in websockets:
