@@ -43,7 +43,7 @@ class ClientServerActionType(str, Enum): # client - server
 # action to control python server from worker
 class WorkerServerActionType(str, Enum): # worker - server
     LOG = "log"
-    END = "end_process"
+    END = "end"
     ABORTED = "aborted"
     ERROR = "process_error"
 
