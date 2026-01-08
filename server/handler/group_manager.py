@@ -49,7 +49,9 @@ class GroupManager:
             logging.info("END!")
 
     async def start_process(self):
-        print("START")
+        self.status = JobStatus.IN_PROGRESS
+        await self.send(message="Starting process...", content=ClientContent(job_status=self.status))
+        await self.worker_connection.prompt(self)
 
     async def bind(self, websocket:WebSocket):
         self.client_connections.append(websocket)

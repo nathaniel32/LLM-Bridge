@@ -24,7 +24,7 @@ class WorkerConnection:
             try:
                 self.job_event = asyncio.Event()
                 self.group_manager = group_manager
-                self.group_manager.send("Sending Job to Worker...")
+                await self.group_manager.send("Sending Job to Worker...")
             finally:
                 self.job_event = None
                 self.group_manager = None
