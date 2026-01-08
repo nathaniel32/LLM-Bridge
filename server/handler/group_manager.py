@@ -3,6 +3,8 @@ from fastapi import WebSocket, WebSocketDisconnect
 from typing import TYPE_CHECKING, List
 from common.models import ClientServerActionType, ServerClientActionType, StatusType
 from server.utils import ws_response
+import logging
+
 if TYPE_CHECKING:
     from server.handler.connection_manager import ConnectionManager
 
@@ -21,30 +23,27 @@ class GroupManager:
     async def _message_listener(self, websocket:WebSocket):
         try:
             while True:
-                try:
-                    message = await websocket.receive()
-                except WebSocketDisconnect as e:
-                    raise Exception(f"- WebSocketDisconnect: {e}") from e
-                except RuntimeError as e:
-                    raise Exception(f"- RuntimeError: {e}") from e
+                message = await websocket.receive()
 
-                print(message)
                 if message.get("text"):
-                    data = json.loads(message["text"])
-                    action = data.get("action")
+                    try:
+                        data = json.loads(message["text"])
+                        action = data.get("action")
 
-                    match action:
-                        case ClientServerActionType.ABORT_REQUEST:
-                            pass
-                        case _:
-                            await self.send(message="Unknown action", status_type=StatusType.ERROR)
+                        match action:
+                            case ClientServerActionType.ABORT_REQUEST:
+                                pass
+                            case _:
+                                await self.send(message="Unknown action", status_type=StatusType.ERROR)
+                    except Exception:
+                        print(message)
 
+        except WebSocketDisconnect:
+            logging.info("WebSocket disconnected")
         except Exception as e:
-            print(f"Error: {e}")
-            import traceback
-            traceback.print_exc()
+            logging.exception("Unexpected error in websocket listener")
         finally:
-            print("stop")
+            logging.info("END!")
 
     async def bind(self, websocket:WebSocket):
         self.client_connections.append(websocket)
