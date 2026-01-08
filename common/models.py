@@ -21,7 +21,10 @@ class StreamResponseContent(BaseModel):
     index: int
     chunk: Optional[str] = None
 
-class ClientLogContent(BaseModel):
+class PromptContent(BaseModel):
+    prompt: str
+
+class ClientContent(BaseModel):
     job_status: Optional[JobStatus] = None
     response: Optional[str] = None
     stream_response: Optional[StreamResponseContent] = None
@@ -29,9 +32,6 @@ class ClientLogContent(BaseModel):
     worker_num: Optional[int] = None
     group_num: Optional[int] = None
     queue_length: Optional[int] = None
-
-class PromptContent(BaseModel):
-    prompt: str
 
 #############################################################################################
 
@@ -68,4 +68,4 @@ class MessageModel(BaseModel):
 class ResponseModel(BaseModel):
     action: Union[ServerClientActionType, ClientServerActionType, ServerWorkerActionType, WorkerServerActionType]
     message: Optional[MessageModel] = None
-    content: Optional[Union[ClientLogContent, PromptContent, StreamResponseContent]] = None
+    content: Optional[Union[ClientContent, PromptContent, StreamResponseContent]] = None
