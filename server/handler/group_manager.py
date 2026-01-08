@@ -1,7 +1,7 @@
 import json
 from fastapi import WebSocket, WebSocketDisconnect
 from typing import TYPE_CHECKING, List, Optional
-from common.models import ClientServerActionType, ServerClientActionType, StatusType
+from common.models import ClientServerActionType, ServerClientActionType, StatusType, JobStatus, ClientContent
 from server.utils import ws_response
 import logging
 if TYPE_CHECKING:
@@ -32,8 +32,10 @@ class GroupManager:
                         action = data.get("action")
 
                         match action:
-                            case ClientServerActionType.ABORT_REQUEST:
-                                pass
+                            case ClientServerActionType.PROMPT:
+                                await self.connection_manager.enqueue_job(group_manager=self)
+                                self.status = JobStatus.QUEUED
+                                await self.send(content=ClientContent(job_status=self.status))
                             case _:
                                 await self.send(message="Unknown action", message_status=StatusType.ERROR)
                     except Exception:
