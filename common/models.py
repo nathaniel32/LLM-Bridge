@@ -17,49 +17,55 @@ class StatusType(str, Enum):
 
 #############################################################################################
 
-class ServerClientContent(BaseModel):
+class StreamResponseContent(BaseModel):
+    index: int
+    response: Optional[str] = None
+
+class ClientLogContent(BaseModel):
     job_status: Optional[JobStatus] = None
+    response: Optional[str] = None
+    stream_response: Optional[StreamResponseContent] = None
     queue_position: Optional[int] = None
     worker_num: Optional[int] = None
     group_num: Optional[int] = None
     queue_length: Optional[int] = None
 
-class WorkerServerContent(BaseModel):
-    index: int
-    response: Optional[str] = None
+class PromptContent(BaseModel):
+    prompt: str
 
 #############################################################################################
-
-# action to control client from Server
-class ServerClientActionType(str, Enum): # server - client
-    LOG = "log"
-    HEARTBEAT = "heartbeat"
 
 # action to control server from client
 class ClientServerActionType(str, Enum): # client - server
     ABORT_REQUEST = "abort_request"
     PROMPT = "prompt"
 
-# action to control python server from worker
-class WorkerServerActionType(str, Enum): # worker - server
+# action to control client from Server
+class ServerClientActionType(str, Enum): # server - client
     LOG = "log"
-    END = "end"
-    ABORTED = "aborted"
-    ERROR = "error"
+    HEARTBEAT = "heartbeat"
 
 # action to control worker from python server
 class ServerWorkerActionType(str, Enum): # server - worker
     LOG = "log"
-    PROMPT = "prompt"
     ABORT_REQUEST = "abort_request"
+    PROMPT = "prompt"
+
+# action to control python server from worker
+class WorkerServerActionType(str, Enum): # worker - server
+    LOG = "log"
+    RESPONSE = "response"
+    END = "end"
+    ABORTED = "aborted"
+    ERROR = "error"
 
 #############################################################################################
 
 class MessageModel(BaseModel):
     text: str
-    status: Optional[StatusType] = StatusType.INFO
+    status: StatusType = StatusType.INFO
 
 class ResponseModel(BaseModel):
     action: Union[ServerClientActionType, ClientServerActionType, ServerWorkerActionType, WorkerServerActionType]
     message: Optional[MessageModel] = None
-    content: Optional[Union[ServerClientContent, WorkerServerContent]] = None
+    content: Optional[Union[ClientLogContent, PromptContent, StreamResponseContent]] = None
