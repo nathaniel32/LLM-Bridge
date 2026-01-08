@@ -12,12 +12,12 @@ class GroupManager:
         self.connection_manager = connection_manager
         self.client_connections: List[WebSocket] = []
 
-    async def send(self, message=None, status_type=StatusType.INFO, content=None, action=ServerClientActionType.LOG, connections=None):
+    async def send(self, message=None, message_status=StatusType.INFO, content=None, action=ServerClientActionType.LOG, connections=None):
         print(message)
         if connections is None:
             connections = self.client_connections
 
-        await ws_response(websockets=connections, action=action, message=message, content=content, status_type=status_type)
+        await ws_response(websockets=connections, action=action, message=message, content=content, message_status=message_status)
 
     async def _message_listener(self, websocket:WebSocket):
         try:
@@ -33,7 +33,7 @@ class GroupManager:
                             case ClientServerActionType.ABORT_REQUEST:
                                 pass
                             case _:
-                                await self.send(message="Unknown action", status_type=StatusType.ERROR)
+                                await self.send(message="Unknown action", message_status=StatusType.ERROR)
                     except Exception:
                         await self.send(message=message.get("text"))
 

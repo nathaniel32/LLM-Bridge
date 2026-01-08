@@ -55,8 +55,11 @@ class ServerWorkerActionType(str, Enum): # server - worker
 
 #############################################################################################
 
+class MessageModel(BaseModel):
+    text: str
+    status: Optional[StatusType] = StatusType.INFO
+
 class ResponseModel(BaseModel):
     action: Union[ServerClientActionType, ClientServerActionType, ServerWorkerActionType, WorkerServerActionType]
-    message: Optional[str] = None
-    status: Optional[StatusType] = None
+    message: Optional[MessageModel] = None
     content: Optional[Union[ClientContent, ResponseContent]] = None

@@ -25,7 +25,7 @@ class WorkerConnection:
                             case WorkerServerActionType.LOG:
                                 pass
                             case _:
-                                await self.send(message="Unknown action", status_type=StatusType.ERROR)
+                                await self.send(message="Unknown action", message_status=StatusType.ERROR)
                     except Exception:
                         await self.send(message=message.get("text"))
 

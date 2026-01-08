@@ -1,4 +1,4 @@
-from common.models import ResponseModel
+from common.models import ResponseModel, MessageModel
 from fastapi import WebSocket
 from typing import List
 
@@ -6,10 +6,11 @@ async def ws_response(
     websockets: List[WebSocket],
     action,
     message=None,
-    status_type=None,
+    message_status=None,
     content=None
 ) -> dict:
-    response = ResponseModel(action=action, message=message, status_type=status_type, content=content)
+    message_model = MessageModel(text=message, status=message_status)
+    response = ResponseModel(action=action, message=message_model, content=content)
     #print(response.content)
     for websocket in websockets:
         try:

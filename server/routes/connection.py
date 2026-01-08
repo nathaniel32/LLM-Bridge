@@ -21,7 +21,7 @@ class Connection:
         key = websocket.cookies.get("access_key")
 
         if key != config.WORKER_ACCESS_KEY:
-            await ws_response(websockets=[websocket], message="Unauthorized: Invalid key", status_type=StatusType.ERROR, action=ServerWorkerActionType.LOG)
+            await ws_response(websockets=[websocket], message="Unauthorized: Invalid key", message_status=StatusType.ERROR, action=ServerWorkerActionType.LOG)
             await websocket.close(code=status.WS_1008_POLICY_VIOLATION)
             return
         

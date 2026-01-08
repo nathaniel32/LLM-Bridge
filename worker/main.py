@@ -14,11 +14,11 @@ class Worker:
         self.connection = None
         self.ssl_context = ssl.create_default_context(cafile=certifi.where()) if url.startswith("wss://") else None
 
-    async def send(self, message=None, status_type=StatusType.INFO, content=None, action=WorkerServerActionType.LOG):
+    async def send(self, message=None, message_status=StatusType.INFO, content=None, action=WorkerServerActionType.LOG):
         if message:
             message = f"WORKER: {message}"
             logging.info(message)
-        await ws_response(websocket=self.connection, action=action, message=message, status_type=status_type, content=content)
+        await ws_response(websocket=self.connection, action=action, message=message, message_status=message_status, content=content)
 
     # server listener
     async def _message_listener(self):
@@ -31,7 +31,7 @@ class Worker:
                     case ServerWorkerActionType.LOG:
                         print(data)
                     case _:
-                        await self.send(message="Unknown action", status_type=StatusType.ERROR)
+                        await self.send(message="Unknown action", message_status=StatusType.ERROR)
 
     async def connect(self):
         headers = {"Cookie": f"access_key={config.WORKER_ACCESS_KEY}"}
