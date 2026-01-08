@@ -6,5 +6,3 @@ class Config:
         if value is None:
             raise AttributeError(f"Config has no attribute '{name}'")
         return value
-
-config = Config()

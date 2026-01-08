@@ -1,13 +1,7 @@
 import asyncio
 import logging
 import argparse
-from common.utils import config
-
-from pathlib import Path
-from dotenv import load_dotenv
-BASE_DIR = Path(__file__).resolve().parent
-load_dotenv(dotenv_path=BASE_DIR / ".env")
-logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
+from worker.setting import config
 
 class Worker:
     def __init__(self, url):

@@ -1,6 +1,6 @@
 from fastapi import APIRouter, WebSocket, status
 from common.models import StatusType, ServerWorkerActionType
-from common.utils import config
+from server.setting import config
 from server.utils import ws_response
 from server.handler.connection_manager import ConnectionManager
 

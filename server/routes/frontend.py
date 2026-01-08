@@ -1,6 +1,7 @@
 from fastapi import APIRouter, status, Request
 from fastapi.responses import HTMLResponse, FileResponse
 import os
+from server.setting import BASE_DIR, config
 
 class Frontend:
     def __init__(self):
@@ -8,4 +9,6 @@ class Frontend:
         self.router.add_api_route("/", self.root, methods=["GET"])
 
     async def root(self, request: Request):
-        return FileResponse(os.path.join(".frontend", "index.html"))
+        print(config.WORKER_ACCESS_KEY)
+        print(BASE_DIR)
+        return FileResponse(os.path.join(BASE_DIR, ".frontend", "index.html"))

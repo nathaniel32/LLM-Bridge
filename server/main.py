@@ -2,14 +2,6 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from server.routes.connection import Connection
 from server.routes.frontend import Frontend
-from common.utils import config
-import logging
-
-from pathlib import Path
-from dotenv import load_dotenv
-BASE_DIR = Path(__file__).resolve().parent
-load_dotenv(dotenv_path=BASE_DIR / ".env")
-logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
 
 class App:
     def __init__(self):
