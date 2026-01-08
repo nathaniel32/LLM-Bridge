@@ -14,7 +14,7 @@ class Connection:
     async def client_endpoint(self, websocket: WebSocket):
         await websocket.accept()
         session = await self.connection_manager.add_client_session()
-        await session.bind(websocket)
+        await session.bind()
 
     async def worker_endpoint(self, websocket: WebSocket):
         await websocket.accept()
