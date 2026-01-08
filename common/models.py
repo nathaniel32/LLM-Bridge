@@ -15,6 +15,21 @@ class StatusType(str, Enum):
     ERROR = "error"
     SUCCESS = "success"
 
+#############################################################################################
+
+class ClientContent(BaseModel):
+    job_status: Optional[JobStatus] = None
+    queue_position: Optional[int] = None
+    worker_num: Optional[int] = None
+    group_num: Optional[int] = None
+    queue_length: Optional[int] = None
+
+class ResponseContent(BaseModel):
+    index: int
+    response: Optional[str] = None
+
+#############################################################################################
+
 # action to control client from Server
 class ServerClientActionType(str, Enum): # server - client
     LOG = "log"
@@ -38,8 +53,10 @@ class ServerWorkerActionType(str, Enum): # server - worker
     PROMPT = "prompt"
     ABORT_REQUEST = "abort_request"
 
+#############################################################################################
+
 class ResponseModel(BaseModel):
     action: Union[ServerClientActionType, ClientServerActionType, ServerWorkerActionType, WorkerServerActionType]
     message: Optional[str] = None
-    status_type: Optional[StatusType] = None
-    content: Optional[Any] = None   # Union[ClientLogModel, UploadFileModel, JobInfoModel]
+    status: Optional[StatusType] = None
+    content: Optional[Union[ClientContent, ResponseContent]] = None
