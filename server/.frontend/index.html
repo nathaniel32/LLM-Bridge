@@ -20,15 +20,23 @@
         }
 
         ws.onmessage = (event) => {
+            const data = JSON.parse(event.data);
             const li = document.createElement("li");
-            li.textContent = event.data;
+            li.textContent = `${data.action}: ${data.content.prompt}`;
             messages.appendChild(li);
         }
 
         function sendMessage() {
             const input = document.getElementById("messageInput");
-            ws.send(input.value);
+            const message = {
+                action: "send_message",
+                content: {
+                    prompt: input.value
+                }
+            };
+            ws.send(JSON.stringify(message));
             input.value = "";
+            console.log(message);
         }
     </script>
 </body>
