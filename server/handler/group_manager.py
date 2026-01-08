@@ -4,7 +4,6 @@ from typing import TYPE_CHECKING, List
 from common.models import ClientServerActionType, ServerClientActionType, StatusType
 from server.utils import ws_response
 import logging
-
 if TYPE_CHECKING:
     from server.handler.connection_manager import ConnectionManager
 
