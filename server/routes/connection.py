@@ -7,14 +7,16 @@ from server.handler.connection_manager import ConnectionManager
 class Connection:
     def __init__(self):
         self.router = APIRouter(prefix="/connection", tags=["Connection"])
+        self.router.add_api_websocket_route("/client", self.client_endpoint)
+        self.router.add_api_websocket_route("/worker", self.worker_endpoint)
         self.connection_manager = ConnectionManager()
 
-    async def client_ws_endpoint(self, websocket: WebSocket):
+    async def client_endpoint(self, websocket: WebSocket):
         await websocket.accept()
         session = await self.connection_manager.add_client_session()
         await session.bind(websocket)
 
-    async def worker_ws_endpoint(self, websocket: WebSocket):
+    async def worker_endpoint(self, websocket: WebSocket):
         await websocket.accept()
         key = websocket.cookies.get("access_key")
 
@@ -23,5 +25,5 @@ class Connection:
             await websocket.close(code=status.WS_1008_POLICY_VIOLATION)
             return
         
-        session = await self.connection_manager.add_worker_session(websocket)
+        session = await self.connection_manager.add_worker_session()
         await session.bind()
