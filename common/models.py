@@ -17,14 +17,14 @@ class StatusType(str, Enum):
 
 #############################################################################################
 
-class ClientContent(BaseModel):
+class ServerClientContent(BaseModel):
     job_status: Optional[JobStatus] = None
     queue_position: Optional[int] = None
     worker_num: Optional[int] = None
     group_num: Optional[int] = None
     queue_length: Optional[int] = None
 
-class ResponseContent(BaseModel):
+class WorkerServerContent(BaseModel):
     index: int
     response: Optional[str] = None
 
@@ -62,4 +62,4 @@ class MessageModel(BaseModel):
 class ResponseModel(BaseModel):
     action: Union[ServerClientActionType, ClientServerActionType, ServerWorkerActionType, WorkerServerActionType]
     message: Optional[MessageModel] = None
-    content: Optional[Union[ClientContent, ResponseContent]] = None
+    content: Optional[Union[ServerClientContent, WorkerServerContent]] = None
