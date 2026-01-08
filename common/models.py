@@ -45,7 +45,7 @@ class WorkerServerActionType(str, Enum): # worker - server
     LOG = "log"
     END = "end"
     ABORTED = "aborted"
-    ERROR = "process_error"
+    ERROR = "error"
 
 # action to control worker from python server
 class ServerWorkerActionType(str, Enum): # server - worker
