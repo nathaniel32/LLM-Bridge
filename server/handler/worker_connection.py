@@ -14,7 +14,7 @@ class WorkerConnection:
         self.connection_manager = connection_manager
         self.connection = connection
         self.job_event: Optional[asyncio.Event] = None
-        self.group_manager = Optional[GroupManager] = None
+        self.group_manager: Optional[GroupManager] = None
 
     async def send(self, action, content=None):
         await ws_response(websockets=[self.connection], action=action, content=content)
