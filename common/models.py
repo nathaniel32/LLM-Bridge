@@ -19,7 +19,7 @@ class StatusType(str, Enum):
 
 class StreamResponseContent(BaseModel):
     index: int
-    response: Optional[str] = None
+    chunk: Optional[str] = None
 
 class ClientLogContent(BaseModel):
     job_status: Optional[JobStatus] = None
@@ -54,7 +54,7 @@ class ServerWorkerActionType(str, Enum): # server - worker
 # action to control python server from worker
 class WorkerServerActionType(str, Enum): # worker - server
     LOG = "log"
-    RESPONSE = "response"
+    STREAM_RESPONSE = "stream_response"
     END = "end"
     ABORTED = "aborted"
     ERROR = "error"
