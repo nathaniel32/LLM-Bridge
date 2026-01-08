@@ -10,3 +10,4 @@ class GroupManager:
 
     async def bind(self, websocket:WebSocket):
         self.client_connections.append(websocket)
+        print("client online: ", len(self.client_connections))
