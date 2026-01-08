@@ -13,8 +13,8 @@ class Connection:
 
     async def client_endpoint(self, websocket: WebSocket):
         await websocket.accept()
-        connection = await self.connection_manager.add_group_connection()
-        await connection.bind(websocket)
+        manager = await self.connection_manager.add_group_manager()
+        await manager.bind(websocket)
 
     async def worker_endpoint(self, websocket: WebSocket):
         await websocket.accept()

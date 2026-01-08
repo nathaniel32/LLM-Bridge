@@ -1,13 +1,13 @@
-from server.handler.group_connection import GroupConnection
+from server.handler.group_manager import GroupManager
 from server.handler.worker_connection import WorkerConnection
 from typing import List
 import asyncio
 
 class ConnectionManager:
     def __init__(self):
-        self.group_connections: List[GroupConnection] = []
+        self.group_managers: List[GroupManager] = []
         self.worker_connections: List[WorkerConnection] = []
-        self.waiting_groups: List[GroupConnection] = []
+        self.waiting_groups: List[GroupManager] = []
         self._group_lock = asyncio.Lock()
         self._worker_lock = asyncio.Lock()
         self._dispatch_lock = asyncio.Lock()
@@ -15,27 +15,27 @@ class ConnectionManager:
     # send to all groups
     async def _broadcast(self):
         async with self._group_lock:
-            groups = self.group_connections.copy()
+            groups = self.group_managers.copy()
         
         # Lockless broadcast (avoids deadlock)
-        for group_connection in groups:
-            print(group_connection)
+        for group in groups:
+            print(group)
 
-    # add group connection
-    async def add_group_connection(self) -> GroupConnection:
+    # add group manager
+    async def add_group_manager(self) -> GroupManager:
         async with self._group_lock:
-            connection = GroupConnection(self)
-            self.group_connections.append(connection)
-            print("Active Group connection: ", len(self.group_connections))
+            manager = GroupManager(self)
+            self.group_managers.append(manager)
+            print("Active Group Manager: ", len(self.group_managers))
         
-        return connection
+        return manager
     
-    # remove group connection
-    async def remove_group_connection(self, connection: GroupConnection):
+    # remove group manager
+    async def remove_group_manager(self, manager: GroupManager):
         async with self._group_lock:
-            if connection in self.group_connections:
-                self.group_connections.remove(connection)
-                print("Group connection removed: ", len(self.group_connections))
+            if manager in self.group_managers:
+                self.group_managers.remove(manager)
+                print("Group Manager removed: ", len(self.group_managers))
         
         await self._broadcast()
 
