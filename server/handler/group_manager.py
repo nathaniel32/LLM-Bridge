@@ -36,7 +36,7 @@ class ChatContext(BaseModel):
             messages.append({"role": "user", "content": interaction.prompt})
             messages.append({"role": "assistant", "content": interaction.response})
         messages.append({"role": "user", "content": self.active_interaction.prompt})
-        return json.dumps(messages, indent=2)
+        return json.dumps(messages)
 
 class GroupManager:
     def __init__(self, connection_manager:"ConnectionManager"):
