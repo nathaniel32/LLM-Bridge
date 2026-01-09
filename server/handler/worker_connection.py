@@ -25,7 +25,7 @@ class WorkerConnection:
                 self.job_event = asyncio.Event()
                 self.group_manager = group_manager
                 await self.group_manager.send(message=MessageModel(text="Sending Job to Worker..."))
-                await self.send(action=ServerWorkerActionType.PROMPT, content=PromptContent(prompt="ok"))
+                await self.send(action=ServerWorkerActionType.PROMPT, content=PromptContent(prompt=group_manager.prompt))
                 await self.job_event.wait()
             finally:
                 self.job_event = None

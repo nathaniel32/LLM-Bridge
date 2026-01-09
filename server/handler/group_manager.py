@@ -13,12 +13,19 @@ class GroupManager:
         self.connection_manager = connection_manager
         self.client_connections: List[WebSocket] = []
         self.worker_connection: Optional["WorkerConnection"] = None
+        self.prompt = None
 
     async def send(self, message=None, content=None, action=ServerClientActionType.LOG, connections=None):
         if connections is None:
             connections = self.client_connections
 
         await ws_response(websockets=connections, action=action, message=message, content=content)
+
+    async def prompt_handler(self, prompt):
+        self.prompt = prompt
+        await self.connection_manager.enqueue_job(group_manager=self)
+        self.status = JobStatus.QUEUED
+        await self.send(content=ClientContent(job_status=self.status))
 
     async def _event_listener(self, websocket:WebSocket):
         try:
@@ -32,9 +39,7 @@ class GroupManager:
                         
                         match response_model.action:
                             case ClientServerActionType.PROMPT:
-                                await self.connection_manager.enqueue_job(group_manager=self)
-                                self.status = JobStatus.QUEUED
-                                await self.send(content=ClientContent(job_status=self.status))
+                                await self.prompt_handler(prompt=response_model.content.prompt)
                             case _:
                                 await self.send(message=MessageModel(text="Unknown action", status=StatusType.ERROR))
                     except Exception as e:

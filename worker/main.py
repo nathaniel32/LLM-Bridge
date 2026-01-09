@@ -32,6 +32,8 @@ class Worker:
         
         await self.send(message=MessageModel(text=MODEL))
         
+        print("\n\n==== Client:", prompt)
+        print("====AI:")
         async with httpx.AsyncClient() as client:
             async with client.stream("POST", OLLAMA_URL, json=payload) as response:
                 response.raise_for_status()
