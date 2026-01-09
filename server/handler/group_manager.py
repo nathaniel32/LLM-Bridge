@@ -27,6 +27,7 @@ class ChatContext(BaseModel):
         combined_response = "".join([item.response for item in self.response_stream_history])
         interaction = Interaction(prompt=self.prompt, response=combined_response)
         self.interaction_history.append(interaction)
+        self.clear()
         return interaction
     
     def add_response_stream(self, response:ResponseStreamContent):
