@@ -17,6 +17,10 @@ class LiveInteraction(BaseModel):
     prompt: Optional[str] = None
     response_stream_history: List[StreamResponseContent] = []
 
+    def get_full_interaction(self) -> Interaction:
+        combined_response = "".join([item.response for item in self.response_stream_history])
+        return Interaction(prompt=self.prompt, response=combined_response)
+
 class GroupManager:
     def __init__(self, connection_manager:"ConnectionManager"):
         self.connection_manager = connection_manager
@@ -41,10 +45,7 @@ class GroupManager:
         self.status = JobStatus.IN_PROGRESS
         await self.send(message=MessageModel(text="Starting process..."), content=ClientContent(job_status=self.status))
         await self.worker_connection.prompt(self)
-        
-        print(self.live_interaction.prompt)
-        print(self.live_interaction.response_stream_history)
-        #self.interaction_history.append()
+        self.interaction_history.append(self.live_interaction.get_full_interaction())
 
     async def _event_listener(self, websocket:WebSocket):
         try:
