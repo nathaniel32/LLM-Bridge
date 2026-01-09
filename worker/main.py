@@ -71,7 +71,7 @@ class Worker:
                             break
         except Exception as e:
             logging.exception(f"Exception: {e}")
-            await self.send(message=MessageModel(text=str(e)), action=WorkerServerActionType.ERROR)
+            await self.send(message=MessageModel(text=str(e), status=StatusType.ERROR), action=WorkerServerActionType.ERROR)
         finally:
             print("\nEND!")
             await self.send(action=WorkerServerActionType.END)
