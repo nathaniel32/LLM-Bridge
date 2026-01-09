@@ -45,7 +45,7 @@ class WorkerConnection:
 
                         match action:
                             case WorkerServerActionType.LOG:
-                                await self.group_manager.send(message="ok")
+                                await self.group_manager.send(message=data['message']['text'], message_status=data['message']['status'])
                             case _:
                                 await self.send(message="Unknown action", message_status=StatusType.ERROR)
                     except Exception:
