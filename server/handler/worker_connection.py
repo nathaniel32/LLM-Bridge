@@ -53,7 +53,7 @@ class WorkerConnection:
                             case WorkerServerActionType.ERROR:
                                 pass
                             case WorkerServerActionType.END:
-                                pass
+                                self.job_event.set()
                             case _:
                                 await self.group_manager.send(message=MessageModel(text="Worker-Server Unknown action", status=StatusType.ERROR))
                     except Exception:

@@ -47,7 +47,7 @@ class Worker:
                         await self.send(action=WorkerServerActionType.STREAM_RESPONSE, content=StreamResponseContent(created_at=data["created_at"], response=data["response"]))
                     
                     if data.get("done", False):
-                        print("\n\n--- DONE ---")
+                        await self.send(action=WorkerServerActionType.END)
                         break
 
     # server listener
