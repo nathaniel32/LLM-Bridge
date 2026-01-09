@@ -47,7 +47,7 @@ class WorkerConnection:
 
                         match response_model.action:    
                             case WorkerServerActionType.STREAM_RESPONSE:
-                                self.group_manager.chat_context.active_interaction.add_response_chunk(response_model.content.response)
+                                self.group_manager.chat_context.active_interaction.add_response_chunk(response_model.content.message.content)
                                 await self.group_manager.send(content=ClientContent(response_stream=response_model.content))
                             case WorkerServerActionType.ABORTED:
                                 pass
@@ -58,6 +58,7 @@ class WorkerConnection:
                             case _:
                                 pass
                     except Exception as e:
+                        logging.exception(f"Exception: {e}")
                         await self.group_manager.send(message=MessageModel(text=str(e), status=StatusType.ERROR))
 
         except WebSocketDisconnect:
