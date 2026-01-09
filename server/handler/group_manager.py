@@ -32,7 +32,7 @@ class ChatContext(BaseModel):
     def add_response_stream(self, response:ResponseStreamContent):
         self.response_stream_history.append(response)
 
-    def to_json_messages(self):
+    def get_chat_message(self):
         messages = []
         if self.system:
             messages.append({"role": "system", "content": self.system})
