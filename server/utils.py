@@ -1,16 +1,14 @@
 from common.models import ResponseModel, MessageModel
 from fastapi import WebSocket
-from typing import List
+from typing import List, Optional
 
 async def ws_response(
     websockets: List[WebSocket],
     action,
-    message=None,
-    message_status=None,
-    content=None
+    message: Optional[MessageModel] = None,
+    content = None
 ) -> dict:
-    message_model = None if message is None else MessageModel(text=message, status=message_status)
-    response = ResponseModel(action=action, message=message_model, content=content)
+    response = ResponseModel(action=action, message=message, content=content)
     print(message)
     for websocket in websockets:
         try:

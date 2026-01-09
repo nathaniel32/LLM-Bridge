@@ -1,5 +1,5 @@
 from fastapi import APIRouter, WebSocket, status
-from common.models import StatusType, ServerWorkerActionType
+from common.models import StatusType, ServerWorkerActionType, MessageModel
 from server.setting import config
 from server.utils import ws_response
 from server.handler.connection_manager import ConnectionManager
@@ -21,7 +21,7 @@ class Connection:
         key = websocket.cookies.get("access_key")
 
         if key != config.WORKER_ACCESS_KEY:
-            await ws_response(websockets=[websocket], message="Unauthorized: Invalid key", message_status=StatusType.ERROR, action=ServerWorkerActionType.LOG)
+            await ws_response(websockets=[websocket], message=MessageModel(text="Unauthorized: Invalid key", status=StatusType.ERROR), action=ServerWorkerActionType.LOG)
             await websocket.close(code=status.WS_1008_POLICY_VIOLATION)
             return
         

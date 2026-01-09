@@ -5,7 +5,7 @@ import websockets
 import json
 import ssl
 import certifi
-from common.models import ServerWorkerActionType, StatusType, WorkerServerActionType, StreamResponseContent
+from common.models import ServerWorkerActionType, StatusType, WorkerServerActionType, StreamResponseContent, MessageModel
 from worker.utils import ws_response
 import httpx
 
@@ -18,7 +18,8 @@ class Worker:
     async def send(self, message=None, message_status=StatusType.INFO, content=None, action=WorkerServerActionType.LOG):
         if message:
             message = f"WORKER: {message}"
-        await ws_response(websocket=self.connection, action=action, message=message, message_status=message_status, content=content)
+        message = MessageModel(text=message, status=message_status)
+        await ws_response(websocket=self.connection, action=action, message=message, content=content)
 
     async def prompt(self, prompt):
         OLLAMA_URL = "http://localhost:11434/api/generate"

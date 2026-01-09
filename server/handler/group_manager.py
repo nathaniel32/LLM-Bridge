@@ -1,7 +1,7 @@
 import json
 from fastapi import WebSocket, WebSocketDisconnect
 from typing import TYPE_CHECKING, List, Optional
-from common.models import ClientServerActionType, ServerClientActionType, StatusType, JobStatus, ClientContent
+from common.models import ClientServerActionType, ServerClientActionType, StatusType, JobStatus, ClientContent, MessageModel
 from server.utils import ws_response
 import logging
 if TYPE_CHECKING:
@@ -17,7 +17,9 @@ class GroupManager:
     async def send(self, message=None, message_status=StatusType.INFO, content=None, action=ServerClientActionType.LOG, connections=None):
         if connections is None:
             connections = self.client_connections
-        await ws_response(websockets=connections, action=action, message=message, content=content, message_status=message_status)
+
+        message = MessageModel(text=message, status=message_status)
+        await ws_response(websockets=connections, action=action, message=message, content=content)
 
     async def _event_listener(self, websocket:WebSocket):
         try:
