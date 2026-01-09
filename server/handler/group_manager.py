@@ -4,16 +4,26 @@ from typing import TYPE_CHECKING, List, Optional
 from common.models import ClientServerActionType, ServerClientActionType, StatusType, JobStatus, ClientContent, MessageModel, ResponseModel
 from server.utils import ws_response
 import logging
+from pydantic import BaseModel
 if TYPE_CHECKING:
     from server.handler.connection_manager import ConnectionManager
     from server.handler.worker_connection import WorkerConnection
+
+class Interaction(BaseModel):
+    prompt: str
+    response: str
+
+class LiveInteraction(BaseModel):
+    prompt: Optional[str] = None
+    response_stream: Optional[List[str]] = []
 
 class GroupManager:
     def __init__(self, connection_manager:"ConnectionManager"):
         self.connection_manager = connection_manager
         self.client_connections: List[WebSocket] = []
         self.worker_connection: Optional["WorkerConnection"] = None
-        self.prompt = None
+        self.interaction_history: List[Interaction] = []
+        self.live_interaction = LiveInteraction()
 
     async def send(self, message=None, content=None, action=ServerClientActionType.LOG, connections=None):
         if connections is None:
@@ -26,6 +36,12 @@ class GroupManager:
         await self.connection_manager.enqueue_job(group_manager=self)
         self.status = JobStatus.QUEUED
         await self.send(content=ClientContent(job_status=self.status))
+
+    async def start_process(self):
+        self.status = JobStatus.IN_PROGRESS
+        await self.send(message=MessageModel(text="Starting process..."), content=ClientContent(job_status=self.status))
+        await self.worker_connection.prompt(self)
+        self.interaction_history.append()
 
     async def _event_listener(self, websocket:WebSocket):
         try:
@@ -51,11 +67,6 @@ class GroupManager:
             logging.exception("Unexpected error in websocket listener")
         finally:
             logging.info("END!")
-
-    async def start_process(self):
-        self.status = JobStatus.IN_PROGRESS
-        await self.send(message=MessageModel(text="Starting process..."), content=ClientContent(job_status=self.status))
-        await self.worker_connection.prompt(self)
 
     async def bind(self, websocket:WebSocket):
         self.client_connections.append(websocket)
