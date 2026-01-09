@@ -79,6 +79,7 @@ class GroupManager:
                             case _:
                                 await self.send(message=MessageModel(text="Unknown action", status=StatusType.ERROR))
                     except Exception as e:
+                        logging.exception(f"Error: {e}")
                         await self.send(message=MessageModel(text=str(e), status=StatusType.ERROR))
 
         except WebSocketDisconnect:

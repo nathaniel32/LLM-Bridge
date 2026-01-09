@@ -3,56 +3,117 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>WS Demo with Vue</title>
+    <title>WS LLM Chat</title>
     <script src="https://cdn.jsdelivr.net/npm/vue@2/dist/vue.js"></script>
+    <style>
+        body { font-family: sans-serif }
+        .chat { max-width: 720px; margin: auto }
+        .item { margin-bottom: 16px }
+        .prompt { font-weight: bold }
+        .response { white-space: pre-wrap; margin-top: 6px }
+        .edit { font-size: 12px; margin-left: 8px; cursor: pointer }
+        .messages { position: fixed; top: 16px; right: 16px; width: 280px }
+        .msg { padding: 8px 12px; margin-bottom: 8px; border-radius: 4px; color: #fff; font-size: 14px }
+        .info { background: #3498db }
+        .success { background: #2ecc71 }
+        .warning { background: #f1c40f; color: #000 }
+        .error { background: #e74c3c }
+    </style>
 </head>
 <body>
     <div id="app">
-        <h1>WebSocket Demo</h1>
-        <input type="text" v-model="messageInput" placeholder="Type a message"/>
-        <button @click="sendMessage">Send</button>
-        <ul>
-            <li v-for="(msg, index) in messages" :key="index">{{ msg }}</li>
-        </ul>
+        <div class="messages">
+            <div v-for="m in messages" :key="m.id" class="msg" :class="m.status">
+                {{ m.text }}
+            </div>
+        </div>
+
+        <div class="chat">
+            <h2>LLM Chat</h2>
+
+            <div v-for="item in interactions" :key="item.id" class="item">
+                <div class="prompt">
+                    {{ item.prompt }}
+                    <span class="edit" @click="requestEdit(item)">edit</span>
+                </div>
+                <div class="response">
+                    {{ item.response }}
+                </div>
+            </div>
+
+            <input type="text" v-model="messageInput" placeholder="Type a message">
+            <button @click="sendMessage">Send</button>
+        </div>
     </div>
 
     <script>
         new Vue({
-        el: "#app",
-        data: {
-            ws: null,
-            messageInput: "",
-            messages: []
-        },
-        created() {
-            this.ws = new WebSocket("ws://localhost:9050/connection/client");
+            el: "#app",
+            data: {
+                ws: null,
+                messageInput: "",
+                interactions: [],
+                messages: []
+            },
+            created() {
+                this.ws = new WebSocket("ws://localhost:9050/connection/client");
 
-            this.ws.onopen = () => {
-                console.log("Connected to server");
-            };
-
-            this.ws.onmessage = (event) => {
-                try {
+                this.ws.onmessage = (event) => {
                     const data = JSON.parse(event.data);
-                    const response = data.content?.interaction?.response;
-                    if (response) this.messages.push(response);
-                } catch (err) {
-                    console.error("Invalid message format:", event.data);
-                }
-            };
-        },
-        methods: {
-            sendMessage() {
-                if (this.messageInput.trim() === "") return;
+                    if (data.message) {
+                        console.log(data);
+                        const id = Date.now() + Math.random();
+                        this.messages.push({
+                            id,
+                            text: data.message.text,
+                            status: data.message.status
+                        });
 
-                const message = {
-                    action: "create_job",
-                    content: { text_input: this.messageInput }
+                        setTimeout(() => {
+                            this.messages = this.messages.filter(m => m.id !== id);
+                        }, 5000);
+                    }
+
+                    const interaction = data?.content?.interaction;
+                    if (!interaction) return;
+
+                    const index = this.interactions.findIndex(
+                        i => i.id === interaction.id
+                    );
+
+                    if (index !== -1) {
+                        this.$set(this.interactions, index, interaction);
+                    } else {
+                        this.interactions.push(interaction);
+                    }
                 };
-                this.ws.send(JSON.stringify(message));
-                this.messageInput = "";
+            },
+            methods: {
+                sendMessage() {
+                    if (!this.messageInput.trim()) return;
+
+                    this.ws.send(JSON.stringify({
+                        action: "create_job",
+                        content: {
+                            text_input: this.messageInput
+                        }
+                    }));
+
+                    this.messageInput = "";
+                },
+                requestEdit(item) {
+                    const newPrompt = prompt("Edit prompt:", item.prompt);
+                    if (newPrompt === null) return;
+
+                    this.ws.send(JSON.stringify({
+                        action: "edit_job",
+                        content: {
+                            interaction_id: item.id,
+                            prompt: newPrompt
+                        }
+                    }));
+                }
             }
-        }
         });
     </script>
 </body>
