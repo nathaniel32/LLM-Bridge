@@ -79,6 +79,8 @@ class Worker:
 
     # server listener
     async def _event_listener(self):
+        current_task = None
+
         while True:
             event_data = await self.connection.recv()
             if isinstance(event_data, str):
@@ -86,7 +88,10 @@ class Worker:
                 match response_model.action:
                     case ServerWorkerActionType.CREATE_JOB:
                         messages = json.loads(response_model.content.input_text)
-                        await self.stream_chat(messages=messages)
+                        current_task = asyncio.create_task(self.stream_chat(messages=messages))
+                    case ServerWorkerActionType.ABORT_JOB:
+                        current_task.cancel()
+                        await self.send(message=MessageModel(text="Abort Request", status=StatusType.ERROR))
                     case _:
                         await self.send(message=MessageModel(text="Unknown action", status=StatusType.ERROR))
 
