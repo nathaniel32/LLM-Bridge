@@ -18,6 +18,8 @@
         .success { background: #2ecc71 }
         .warning { background: #f1c40f; color: #000 }
         .error { background: #e74c3c }
+        .status-bar { background: #f5f5f5; padding: 12px; margin-bottom: 16px; border-radius: 4px; font-size: 14px }
+        .status-item { margin-bottom: 4px }
     </style>
 </head>
 <body>
@@ -30,6 +32,25 @@
 
         <div class="chat">
             <h2>LLM Chat</h2>
+
+            <!-- Status bar untuk menampilkan informasi tambahan -->
+            <div v-if="hasStatus" class="status-bar">
+                <div v-if="jobStatus" class="status-item">
+                    <strong>Job Status:</strong> {{ jobStatus }}
+                </div>
+                <div v-if="queuePosition !== null" class="status-item">
+                    <strong>Queue Position:</strong> {{ queuePosition }}
+                </div>
+                <div v-if="queueLength !== null" class="status-item">
+                    <strong>Queue Length:</strong> {{ queueLength }}
+                </div>
+                <div v-if="workerNum !== null" class="status-item">
+                    <strong>Worker #:</strong> {{ workerNum }}
+                </div>
+                <div v-if="groupNum !== null" class="status-item">
+                    <strong>Group #:</strong> {{ groupNum }}
+                </div>
+            </div>
 
             <input type="text" v-model="messageInput" placeholder="Type a message">
             <button @click="sendMessage">Send</button>
@@ -54,13 +75,30 @@
                 ws: null,
                 messageInput: "",
                 interactions: [],
-                messages: []
+                messages: [],
+                // Properti tambahan dari ClientContent
+                jobStatus: null,
+                queuePosition: null,
+                queueLength: null,
+                workerNum: null,
+                groupNum: null
+            },
+            computed: {
+                hasStatus() {
+                    return this.jobStatus !== null || 
+                           this.queuePosition !== null || 
+                           this.queueLength !== null || 
+                           this.workerNum !== null || 
+                           this.groupNum !== null;
+                }
             },
             created() {
                 this.ws = new WebSocket("ws://localhost:9050/connection/client");
 
                 this.ws.onmessage = (event) => {
                     const data = JSON.parse(event.data);
+                    
+                    // Handle message notifications
                     if (data.message) {
                         console.log(data);
                         const id = Date.now() + Math.random();
@@ -75,17 +113,39 @@
                         }, 5000);
                     }
 
-                    const interaction = data?.content?.interaction;
-                    if (!interaction) return;
+                    // Handle content updates
+                    const content = data?.content;
+                    if (!content) return;
 
-                    const index = this.interactions.findIndex(
-                        i => i.id === interaction.id
-                    );
+                    // Update status properties (if not null, update; otherwise ignore)
+                    if (content.job_status !== undefined && content.job_status !== null) {
+                        this.jobStatus = content.job_status;
+                    }
+                    if (content.queue_position !== undefined && content.queue_position !== null) {
+                        this.queuePosition = content.queue_position;
+                    }
+                    if (content.queue_length !== undefined && content.queue_length !== null) {
+                        this.queueLength = content.queue_length;
+                    }
+                    if (content.worker_num !== undefined && content.worker_num !== null) {
+                        this.workerNum = content.worker_num;
+                    }
+                    if (content.group_num !== undefined && content.group_num !== null) {
+                        this.groupNum = content.group_num;
+                    }
 
-                    if (index !== -1) {
-                        this.$set(this.interactions, index, interaction);
-                    } else {
-                        this.interactions.push(interaction);
+                    // Handle interaction updates (append logic)
+                    const interaction = content.interaction;
+                    if (interaction) {
+                        const index = this.interactions.findIndex(
+                            i => i.id === interaction.id
+                        );
+
+                        if (index !== -1) {
+                            this.$set(this.interactions, index, interaction);
+                        } else {
+                            this.interactions.push(interaction);
+                        }
                     }
                 };
             },
