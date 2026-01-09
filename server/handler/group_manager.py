@@ -19,14 +19,14 @@ class GroupManager:
             connections = self.client_connections
         await ws_response(websockets=connections, action=action, message=message, content=content, message_status=message_status)
 
-    async def _message_listener(self, websocket:WebSocket):
+    async def _event_listener(self, websocket:WebSocket):
         try:
             while True:
-                message = await websocket.receive()
+                event_data = await websocket.receive()
 
-                if message.get("text"):
+                if event_data.get("text"):
                     try:
-                        data = json.loads(message["text"])
+                        data = json.loads(event_data["text"])
                         action = data.get("action")
 
                         match action:
@@ -54,4 +54,4 @@ class GroupManager:
     async def bind(self, websocket:WebSocket):
         self.client_connections.append(websocket)
         print("client online: ", len(self.client_connections))
-        await self._message_listener(websocket)
+        await self._event_listener(websocket)

@@ -51,11 +51,11 @@ class Worker:
                         break
 
     # server listener
-    async def _message_listener(self):
+    async def _event_listener(self):
         while True:
-            message = await self.connection.recv()
-            if isinstance(message, str):
-                data = json.loads(message)
+            event_data = await self.connection.recv()
+            if isinstance(event_data, str):
+                data = json.loads(event_data)
                 action = data.get("action")
                 match action:
                     case ServerWorkerActionType.PROMPT:
@@ -70,7 +70,7 @@ class Worker:
             async with websockets.connect(self.url, max_size=2 * 1024 * 1024, additional_headers=headers, ssl=self.ssl_context) as websocket:
                 self.connection = websocket
                 logging.info("Connected to WebSocket server")
-                await self._message_listener()
+                await self._event_listener()
         except websockets.ConnectionClosed as e:
             if e.code == 1008:
                 logging.error(f"Unauthorized")

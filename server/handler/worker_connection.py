@@ -1,6 +1,6 @@
 from typing import TYPE_CHECKING, Optional
 from fastapi import WebSocket, WebSocketDisconnect
-from common.models import WorkerServerActionType, StatusType, ServerWorkerActionType, PromptContent
+from common.models import WorkerServerActionType, StatusType, ServerWorkerActionType, PromptContent, ClientContent, StreamResponseContent, ResponseModel
 import logging
 import json
 from server.handler.group_manager import GroupManager
@@ -33,23 +33,28 @@ class WorkerConnection:
         else:
             raise Exception("Worker busy, please try again later!")
 
-    async def _message_listener(self):
+    async def _event_listener(self):
         try:
             while True:
-                message = await self.connection.receive()
+                event_data = await self.connection.receive()
 
-                if message.get("text"):
+                if event_data.get("text"):
                     try:
-                        data = json.loads(message["text"])
+                        data = json.loads(event_data["text"])
                         action = data.get("action")
+
+                        response_model = ResponseModel(**data)
+                        print(response_model)
 
                         match action:
                             case WorkerServerActionType.LOG:
                                 await self.group_manager.send(message=data['message']['text'], message_status=data['message']['status'])
+                            case WorkerServerActionType.STREAM_RESPONSE:
+                                await self.group_manager.send(content=None)
                             case _:
                                 await self.send(message="Unknown action", message_status=StatusType.ERROR)
                     except Exception:
-                        await self.send(message=message.get("text"))
+                        await self.group_manager.send(message=event_data.get("text"), message_status=StatusType.ERROR)
 
         except WebSocketDisconnect:
             logging.info("WebSocket disconnected")
@@ -59,4 +64,4 @@ class WorkerConnection:
             logging.info("END!")
 
     async def bind(self):
-        await self._message_listener()
+        await self._event_listener()
