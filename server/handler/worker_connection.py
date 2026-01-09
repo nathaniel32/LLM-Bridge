@@ -48,6 +48,7 @@ class WorkerConnection:
                             case WorkerServerActionType.LOG:
                                 await self.group_manager.send(message=response_model.message)
                             case WorkerServerActionType.STREAM_RESPONSE:
+                                self.group_manager.live_interaction.response_stream_history.append(response_model.content)
                                 await self.group_manager.send(content=ClientContent(response_stream=response_model.content))
                             case WorkerServerActionType.ABORTED:
                                 pass
