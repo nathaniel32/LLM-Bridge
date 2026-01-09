@@ -8,6 +8,26 @@ import certifi
 from common.models import ServerWorkerActionType, StatusType, WorkerServerActionType, ResponseStreamContent, MessageModel, ResponseModel
 from worker.utils import ws_response
 import httpx
+from pydantic import BaseModel, Field
+from datetime import datetime
+from typing import Optional
+
+class MessageContent(BaseModel):
+    role: str
+    content: str
+
+class OllamaChatResponse(BaseModel):
+    model: str
+    created_at: str
+    message: MessageContent
+    done: bool
+    done_reason: Optional[str] = None
+    total_duration: Optional[int] = None
+    load_duration: Optional[int] = None
+    prompt_eval_count: Optional[int] = None
+    prompt_eval_duration: Optional[int] = None
+    eval_count: Optional[int] = None
+    eval_duration: Optional[int] = None
 
 class Worker:
     def __init__(self, url):
@@ -21,7 +41,7 @@ class Worker:
         await ws_response(websocket=self.connection, action=action, message=message, content=content)
 
     async def stream_chat(self, messages):
-        OLLAMA_URL = "http://localhost:11434/api/generate"
+        OLLAMA_URL = "http://localhost:11434/api/chat"
         MODEL = "gemma3:4b"
         
         payload = {
@@ -44,19 +64,19 @@ class Worker:
                         if not line:
                             continue
                         
-                        data = json.loads(line)
-                        
-                        if "response" in data:
-                            print(data["response"], end="", flush=True)
-                            await self.send(action=WorkerServerActionType.STREAM_RESPONSE, content=ResponseStreamContent(created_at=data["created_at"], response=data["response"]))
-                        
-                        if data.get("done", False):
+                        data = json.loads(line)                        
+                        ollama_response = OllamaChatResponse(**data)
+                        if ollama_response.message.content:
+                            print(ollama_response.message.content, end="", flush=True)
+                            await self.send(action=WorkerServerActionType.STREAM_RESPONSE, content=ResponseStreamContent(created_at=ollama_response.created_at, response=ollama_response.message.content))
+                        if ollama_response.done:
                             break
         except:
             await self.send(action=WorkerServerActionType.ERROR)
         finally:
             print("\nEND!")
             await self.send(action=WorkerServerActionType.END)
+
 
     # server listener
     async def _event_listener(self):
