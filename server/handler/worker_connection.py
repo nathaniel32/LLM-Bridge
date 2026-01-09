@@ -30,6 +30,7 @@ class WorkerConnection:
             finally:
                 self.job_event = None
                 self.group_manager = None
+                await self.connection_manager.dequeue_job()
         else:
             raise Exception("Worker busy, please try again later!")
 
@@ -67,4 +68,5 @@ class WorkerConnection:
             logging.info("END!")
 
     async def bind(self):
+        await self.connection_manager.dequeue_job()
         await self._event_listener()
