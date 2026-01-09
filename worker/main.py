@@ -64,7 +64,7 @@ class Worker:
                 response_model = ResponseModel(**json.loads(event_data))
                 match response_model.action:
                     case ServerWorkerActionType.CREATE_JOB:
-                        await self.prompt(prompt=response_model.content.prompt)
+                        await self.prompt(prompt=response_model.content.payload)
                     case _:
                         await self.send(message=MessageModel(text="Unknown action", status=StatusType.ERROR))
 

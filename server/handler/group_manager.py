@@ -63,7 +63,7 @@ class GroupManager:
                         
                         match response_model.action:
                             case ClientServerActionType.CREATE_JOB:
-                                await self.prompt_handler(prompt=response_model.content.prompt)
+                                await self.prompt_handler(prompt=response_model.content.payload)
                             case _:
                                 await self.send(message=MessageModel(text="Unknown action", status=StatusType.ERROR))
                     except Exception as e:

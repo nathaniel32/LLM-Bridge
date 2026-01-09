@@ -22,7 +22,7 @@ class StreamResponseContent(BaseModel):
     response: str
 
 class CreateJobContent(BaseModel):
-    prompt: str
+    payload: str
 
 class ClientContent(BaseModel):
     job_status: Optional[JobStatus] = None
