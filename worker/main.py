@@ -32,25 +32,29 @@ class Worker:
         
         await self.send(message=MessageModel(text=MODEL))
         
-        print("\n\n==== Client:", prompt)
-        print("====AI:")
-        async with httpx.AsyncClient() as client:
-            async with client.stream("POST", OLLAMA_URL, json=payload) as response:
-                response.raise_for_status()
-                
-                async for line in response.aiter_lines():
-                    if not line:
-                        continue
+        try:
+            print("\n\n==== Client:", prompt)
+            print("====AI:")
+            async with httpx.AsyncClient() as client:
+                async with client.stream("POST", OLLAMA_URL, json=payload) as response:
+                    response.raise_for_status()
                     
-                    data = json.loads(line)
-                    
-                    if "response" in data:
-                        print(data["response"], end="", flush=True)
-                        await self.send(action=WorkerServerActionType.STREAM_RESPONSE, content=StreamResponseContent(created_at=data["created_at"], response=data["response"]))
-                    
-                    if data.get("done", False):
-                        await self.send(action=WorkerServerActionType.END)
-                        break
+                    async for line in response.aiter_lines():
+                        if not line:
+                            continue
+                        
+                        data = json.loads(line)
+                        
+                        if "response" in data:
+                            print(data["response"], end="", flush=True)
+                            await self.send(action=WorkerServerActionType.STREAM_RESPONSE, content=StreamResponseContent(created_at=data["created_at"], response=data["response"]))
+                        
+                        if data.get("done", False):
+                            break
+        except:
+            await self.send(action=WorkerServerActionType.ERROR)
+        finally:
+            await self.send(action=WorkerServerActionType.END)
 
     # server listener
     async def _event_listener(self):
