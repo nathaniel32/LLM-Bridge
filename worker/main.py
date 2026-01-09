@@ -54,16 +54,14 @@ class Worker:
         
         try:
             print("\n\n==== INPUT:", messages)
-            print(type(messages))
-            print("====AI:")
             async with httpx.AsyncClient() as client:
                 async with client.stream("POST", OLLAMA_URL, json=payload) as response:
+                    print("====AI:")
+
                     response.raise_for_status()
-                    
                     async for line in response.aiter_lines():
                         if not line:
                             continue
-                        
                         data = json.loads(line)                        
                         ollama_response = OllamaChatResponse(**data)
                         if ollama_response.message.content:
