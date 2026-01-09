@@ -1,6 +1,6 @@
 from typing import TYPE_CHECKING, Optional
 from fastapi import WebSocket, WebSocketDisconnect
-from common.models import WorkerServerActionType, StatusType, ServerWorkerActionType, PromptContent, ClientContent, StreamResponseContent, ResponseModel, MessageModel
+from common.models import WorkerServerActionType, StatusType, ServerWorkerActionType, PromptContent, ResponseModel, MessageModel, ClientContent
 import logging
 import json
 from server.handler.group_manager import GroupManager
@@ -50,7 +50,7 @@ class WorkerConnection:
                             case WorkerServerActionType.LOG:
                                 await self.group_manager.send(message=response_model.message)
                             case WorkerServerActionType.STREAM_RESPONSE:
-                                await self.group_manager.send(content=response_model.content)
+                                await self.group_manager.send(content=ClientContent(response_stream=response_model.content))
                             case _:
                                 await self.group_manager.send(message=MessageModel(text="Worker-Server Unknown action", status=StatusType.ERROR))
                     except Exception:
