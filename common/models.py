@@ -17,22 +17,8 @@ class StatusType(str, Enum):
 
 #############################################################################################
 
-class OllamaMessageContent(BaseModel):
-    role: str
-    content: str
-
-class OllamaChatResponse(BaseModel):
-    model: str
-    created_at: str
-    message: OllamaMessageContent
-    done: bool
-    done_reason: Optional[str] = None
-    total_duration: Optional[int] = None
-    load_duration: Optional[int] = None
-    prompt_eval_count: Optional[int] = None
-    prompt_eval_duration: Optional[int] = None
-    eval_count: Optional[int] = None
-    eval_duration: Optional[int] = None
+class ResponseStreamContent(BaseModel):
+    response: str
 
 class CreateJobContent(BaseModel):
     text_input: str
@@ -40,8 +26,8 @@ class CreateJobContent(BaseModel):
 class ClientContent(BaseModel):
     job_status: Optional[JobStatus] = None
     prompt: Optional[str] = None
-    response: Optional[str] = None
-    response_stream: Optional[OllamaChatResponse] = None
+    #response: Optional[str] = None
+    response_stream: Optional[ResponseStreamContent] = None
     queue_position: Optional[int] = None
     worker_num: Optional[int] = None
     group_num: Optional[int] = None
@@ -79,4 +65,4 @@ class MessageModel(BaseModel):
 class ResponseModel(BaseModel):
     action: Optional[Union[ServerClientActionType, ClientServerActionType, ServerWorkerActionType, WorkerServerActionType]] = None
     message: Optional[MessageModel] = None
-    content: Optional[Union[ClientContent, CreateJobContent, OllamaChatResponse]] = None
+    content: Optional[Union[ClientContent, CreateJobContent, ResponseStreamContent]] = None

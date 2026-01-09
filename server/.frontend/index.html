@@ -22,7 +22,7 @@
         ws.onmessage = (event) => {
             const data = JSON.parse(event.data);
             const li = document.createElement("li");
-            li.textContent = data.content.response_stream.message.content;
+            li.textContent = data.content.response_stream.response;
             messages.appendChild(li);
 
             console.log(data);

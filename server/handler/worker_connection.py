@@ -1,6 +1,6 @@
 from typing import TYPE_CHECKING, Optional
 from fastapi import WebSocket, WebSocketDisconnect
-from common.models import WorkerServerActionType, StatusType, ServerWorkerActionType, CreateJobContent, ResponseModel, MessageModel, ClientContent
+from common.models import WorkerServerActionType, StatusType, ServerWorkerActionType, CreateJobContent, ResponseModel, MessageModel, ClientContent, ResponseStreamContent
 import logging
 import json
 from server.handler.group_manager import GroupManager
@@ -47,7 +47,8 @@ class WorkerConnection:
 
                         match response_model.action:    
                             case WorkerServerActionType.STREAM_RESPONSE:
-                                self.group_manager.chat_context.active_interaction.add_response_chunk(response_model.content.message.content)
+                                assert isinstance(response_model.content, ResponseStreamContent)
+                                self.group_manager.chat_context.active_interaction.add_response_chunk(response_model.content.response)
                                 await self.group_manager.send(content=ClientContent(response_stream=response_model.content))
                             case WorkerServerActionType.ABORTED:
                                 pass

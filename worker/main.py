@@ -5,9 +5,28 @@ import websockets
 import json
 import ssl
 import certifi
-from common.models import ServerWorkerActionType, StatusType, WorkerServerActionType, MessageModel, ResponseModel, OllamaChatResponse
+from common.models import ServerWorkerActionType, StatusType, WorkerServerActionType, MessageModel, ResponseModel, ResponseStreamContent
 from worker.utils import ws_response
 import httpx
+from pydantic import BaseModel
+from typing import Optional
+
+class OllamaMessageContent(BaseModel):
+    role: str
+    content: str
+
+class OllamaChatResponse(BaseModel):
+    model: str
+    created_at: str
+    message: OllamaMessageContent
+    done: bool
+    done_reason: Optional[str] = None
+    total_duration: Optional[int] = None
+    load_duration: Optional[int] = None
+    prompt_eval_count: Optional[int] = None
+    prompt_eval_duration: Optional[int] = None
+    eval_count: Optional[int] = None
+    eval_duration: Optional[int] = None
 
 class Worker:
     def __init__(self, url):
@@ -44,10 +63,10 @@ class Worker:
                             continue
                         data = json.loads(line)                        
                         ollama_response = OllamaChatResponse(**data)
-                        await self.send(action=WorkerServerActionType.STREAM_RESPONSE, content=ollama_response)
                         
                         if ollama_response.message.content:
                             print(ollama_response.message.content, end="", flush=True)
+                            await self.send(action=WorkerServerActionType.STREAM_RESPONSE, content=ResponseStreamContent(response=ollama_response.message.content))
                         if ollama_response.done:
                             break
         except Exception as e:
