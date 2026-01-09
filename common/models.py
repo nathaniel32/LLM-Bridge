@@ -26,6 +26,7 @@ class CreateJobContent(BaseModel):
 
 class ClientContent(BaseModel):
     job_status: Optional[JobStatus] = None
+    prompt: Optional[str] = None
     response: Optional[str] = None
     response_stream: Optional[ResponseStreamContent] = None
     queue_position: Optional[int] = None
