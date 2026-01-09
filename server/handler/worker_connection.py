@@ -51,6 +51,12 @@ class WorkerConnection:
                                 await self.group_manager.send(message=response_model.message)
                             case WorkerServerActionType.STREAM_RESPONSE:
                                 await self.group_manager.send(content=ClientContent(response_stream=response_model.content))
+                            case WorkerServerActionType.ABORTED:
+                                pass
+                            case WorkerServerActionType.ERROR:
+                                pass
+                            case WorkerServerActionType.END:
+                                pass
                             case _:
                                 await self.group_manager.send(message=MessageModel(text="Worker-Server Unknown action", status=StatusType.ERROR))
                     except Exception:
