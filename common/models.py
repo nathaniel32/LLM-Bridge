@@ -38,7 +38,6 @@ class CreateJobContent(BaseModel):
 class ClientContent(BaseModel):
     job_status: Optional[JobStatus] = None
     interaction: Optional[Interaction] = None
-    response_stream: Optional[ResponseStreamContent] = None
     queue_position: Optional[int] = None
     worker_num: Optional[int] = None
     group_num: Optional[int] = None
