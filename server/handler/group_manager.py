@@ -53,7 +53,11 @@ class GroupManager:
 
         await ws_response(websockets=connections, action=action, message=message, content=content)
 
+    async def update_active_interaction(self):
+        await self.send(content=ClientContent(interaction=self.chat_context.active_interaction))
+
     async def register_job(self):
+        await self.update_active_interaction()
         await self.connection_manager.enqueue_job(group_manager=self)
         self.status = JobStatus.QUEUED
         await self.send(content=ClientContent(job_status=self.status))
