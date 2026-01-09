@@ -77,18 +77,18 @@ class WorkerConnection:
                     except Exception as e:
                         logging.exception(f"Exception: {e}")
 
-                        if self.job_event:
-                            await self.group_manager.send(message=MessageModel(text=str(e), status=StatusType.ERROR))
-                            self.worker_unsuccess_action = WorkerServerActionType.ERROR
-                            self.job_event.set()
-
         except WebSocketDisconnect:
             logging.info("WebSocket disconnected")
         except Exception as e:
             logging.exception("Unexpected error in websocket listener")
         finally:
-            logging.info("END!")
-
+            logging.info("Worker disconnected!")
+            await self.connection_manager.remove_worker_connection(connection=self)
+            if self.job_event:
+                await self.group_manager.send(message=MessageModel(text=str(e), status=StatusType.ERROR))
+                self.worker_unsuccess_action = WorkerServerActionType.ERROR
+                self.job_event.set()
+            
     async def bind(self):
         await self.connection_manager.dequeue_job()
         await self._event_listener()
