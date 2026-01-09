@@ -1,7 +1,7 @@
 import json
 from fastapi import WebSocket, WebSocketDisconnect
 from typing import TYPE_CHECKING, List, Optional
-from common.models import ClientServerActionType, ServerClientActionType, StatusType, JobStatus, ClientContent, MessageModel, ResponseModel, StreamResponseContent
+from common.models import ClientServerActionType, ServerClientActionType, StatusType, JobStatus, ClientContent, MessageModel, ResponseModel, ResponseStreamContent
 from server.utils import ws_response
 import logging
 from pydantic import BaseModel, Field
@@ -17,7 +17,7 @@ class ChatContext(BaseModel):
     prompt: Optional[str] = None
     system: Optional[str] = None
     interaction_history: List[Interaction] = []
-    response_stream_history: List[StreamResponseContent] = []
+    response_stream_history: List[ResponseStreamContent] = []
 
     def clear(self):
         self.prompt = None
@@ -29,7 +29,7 @@ class ChatContext(BaseModel):
         self.interaction_history.append(interaction)
         return interaction
     
-    def add_response_stream(self, response:StreamResponseContent):
+    def add_response_stream(self, response:ResponseStreamContent):
         self.response_stream_history.append(response)
 
     def to_json_messages(self):

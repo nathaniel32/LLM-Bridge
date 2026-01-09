@@ -17,7 +17,7 @@ class StatusType(str, Enum):
 
 #############################################################################################
 
-class StreamResponseContent(BaseModel):
+class ResponseStreamContent(BaseModel):
     created_at: str
     response: str
 
@@ -27,7 +27,7 @@ class CreateJobContent(BaseModel):
 class ClientContent(BaseModel):
     job_status: Optional[JobStatus] = None
     response: Optional[str] = None
-    response_stream: Optional[StreamResponseContent] = None
+    response_stream: Optional[ResponseStreamContent] = None
     queue_position: Optional[int] = None
     worker_num: Optional[int] = None
     group_num: Optional[int] = None
@@ -65,4 +65,4 @@ class MessageModel(BaseModel):
 class ResponseModel(BaseModel):
     action: Optional[Union[ServerClientActionType, ClientServerActionType, ServerWorkerActionType, WorkerServerActionType]] = None
     message: Optional[MessageModel] = None
-    content: Optional[Union[ClientContent, CreateJobContent, StreamResponseContent]] = None
+    content: Optional[Union[ClientContent, CreateJobContent, ResponseStreamContent]] = None

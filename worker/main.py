@@ -5,7 +5,7 @@ import websockets
 import json
 import ssl
 import certifi
-from common.models import ServerWorkerActionType, StatusType, WorkerServerActionType, StreamResponseContent, MessageModel, ResponseModel
+from common.models import ServerWorkerActionType, StatusType, WorkerServerActionType, ResponseStreamContent, MessageModel, ResponseModel
 from worker.utils import ws_response
 import httpx
 
@@ -47,7 +47,7 @@ class Worker:
                         
                         if "response" in data:
                             print(data["response"], end="", flush=True)
-                            await self.send(action=WorkerServerActionType.STREAM_RESPONSE, content=StreamResponseContent(created_at=data["created_at"], response=data["response"]))
+                            await self.send(action=WorkerServerActionType.STREAM_RESPONSE, content=ResponseStreamContent(created_at=data["created_at"], response=data["response"]))
                         
                         if data.get("done", False):
                             break
