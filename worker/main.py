@@ -5,7 +5,7 @@ import websockets
 import json
 import ssl
 import certifi
-from common.models import ServerWorkerActionType, StatusType, WorkerServerActionType, StreamResponseContent, MessageModel
+from common.models import ServerWorkerActionType, StatusType, WorkerServerActionType, StreamResponseContent, MessageModel, ResponseModel
 from worker.utils import ws_response
 import httpx
 
@@ -55,11 +55,10 @@ class Worker:
         while True:
             event_data = await self.connection.recv()
             if isinstance(event_data, str):
-                data = json.loads(event_data)
-                action = data.get("action")
-                match action:
+                response_model = ResponseModel(**json.loads(event_data))
+                match response_model.action:
                     case ServerWorkerActionType.PROMPT:
-                        await self.prompt(prompt=data["content"]["prompt"])
+                        await self.prompt(prompt=response_model.content.prompt)
                     case _:
                         await self.send(message=MessageModel(text="Unknown action", status=StatusType.ERROR))
 
@@ -77,7 +76,7 @@ class Worker:
                 return
             logging.warning("WebSocket connection was closed")
         except Exception as e:
-            logging.error(f"Exception: {e}")
+            logging.exception(f"Exception: {e}")
 
 if __name__ == "__main__":
     import argparse

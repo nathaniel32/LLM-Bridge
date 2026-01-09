@@ -40,13 +40,10 @@ class WorkerConnection:
 
                 if event_data.get("text"):
                     try:
-                        data = json.loads(event_data["text"])
-                        action = data.get("action")
-
-                        response_model = ResponseModel(**data)
+                        response_model = ResponseModel(**json.loads(event_data["text"]))
                         print(response_model)
 
-                        match action:
+                        match response_model.action:
                             case WorkerServerActionType.LOG:
                                 await self.group_manager.send(message=response_model.message)
                             case WorkerServerActionType.STREAM_RESPONSE:
