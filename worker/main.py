@@ -7,7 +7,7 @@ import ssl
 import certifi
 from common.models import ServerWorkerActionType, StatusType, WorkerServerActionType
 from worker.utils import ws_response
-import requests
+import httpx
 
 class Worker:
     def __init__(self, url):
@@ -21,33 +21,34 @@ class Worker:
         await ws_response(websocket=self.connection, action=action, message=message, message_status=message_status, content=content)
 
     async def prompt(self, prompt):
-        OLLAMA_URL = "http://localhost:11434/api/generate"  # endpoint Ollama serve
-        MODEL = "gemma3:4b"  # sesuai list
-
+        OLLAMA_URL = "http://localhost:11434/api/generate"
+        MODEL = "gemma3:4b"
+        
         payload = {
             "model": MODEL,
             "prompt": prompt,
             "stream": True
         }
-
+        
         await self.send(message=MODEL)
-
-        with requests.post(OLLAMA_URL, json=payload, stream=True) as response:
-            response.raise_for_status()
-
-            for line in response.iter_lines():
-                if not line:
-                    continue
+        
+        async with httpx.AsyncClient() as client:
+            async with client.stream("POST", OLLAMA_URL, json=payload) as response:
+                response.raise_for_status()
                 
-                data = json.loads(line.decode("utf-8"))
-
-                if "response" in data:
-                    print(data["response"], end="", flush=True)
-                    await self.send(message=data["response"])
-
-                if data.get("done", False):
-                    print("\n\n--- DONE ---")
-                    break
+                async for line in response.aiter_lines():
+                    if not line:
+                        continue
+                    
+                    data = json.loads(line)
+                    
+                    if "response" in data:
+                        print(data["response"], end="", flush=True)
+                        await self.send(message=data["response"])
+                    
+                    if data.get("done", False):
+                        print("\n\n--- DONE ---")
+                        break
 
     # server listener
     async def _message_listener(self):
