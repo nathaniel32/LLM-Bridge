@@ -1,6 +1,6 @@
 from typing import TYPE_CHECKING, Optional
 from fastapi import WebSocket, WebSocketDisconnect
-from common.models import WorkerServerActionType, StatusType, ServerWorkerActionType, PromptContent, ClientContent, StreamResponseContent, ResponseModel
+from common.models import WorkerServerActionType, StatusType, ServerWorkerActionType, PromptContent, ClientContent, StreamResponseContent, ResponseModel, MessageModel
 import logging
 import json
 from server.handler.group_manager import GroupManager
@@ -24,7 +24,7 @@ class WorkerConnection:
             try:
                 self.job_event = asyncio.Event()
                 self.group_manager = group_manager
-                await self.group_manager.send("Sending Job to Worker...")
+                await self.group_manager.send(message=MessageModel(text="Sending Job to Worker..."))
                 await self.send(action=ServerWorkerActionType.PROMPT, content=PromptContent(prompt="ok"))
                 await self.job_event.wait()
             finally:
@@ -48,13 +48,13 @@ class WorkerConnection:
 
                         match action:
                             case WorkerServerActionType.LOG:
-                                await self.group_manager.send(message=data['message']['text'], message_status=data['message']['status'])
+                                await self.group_manager.send(message=response_model.message)
                             case WorkerServerActionType.STREAM_RESPONSE:
-                                await self.group_manager.send(content=None)
+                                await self.group_manager.send(content=response_model.content)
                             case _:
-                                await self.send(message="Unknown action", message_status=StatusType.ERROR)
+                                await self.group_manager.send(message=MessageModel(text="Worker-Server Unknown action", status=StatusType.ERROR))
                     except Exception:
-                        await self.group_manager.send(message=event_data.get("text"), message_status=StatusType.ERROR)
+                        await self.group_manager.send(message=MessageModel(text=event_data.get("text"), status=StatusType.ERROR))
 
         except WebSocketDisconnect:
             logging.info("WebSocket disconnected")

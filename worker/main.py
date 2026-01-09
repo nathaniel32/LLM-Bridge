@@ -15,10 +15,9 @@ class Worker:
         self.connection = None
         self.ssl_context = ssl.create_default_context(cafile=certifi.where()) if url.startswith("wss://") else None
 
-    async def send(self, message=None, message_status=StatusType.INFO, content=None, action=WorkerServerActionType.LOG):
+    async def send(self, message:MessageModel=None, content=None, action=WorkerServerActionType.LOG):
         if message:
-            message = f"WORKER: {message}"
-        message = MessageModel(text=message, status=message_status)
+            message.text = f"WORKER: {message.text}"
         await ws_response(websocket=self.connection, action=action, message=message, content=content)
 
     async def prompt(self, prompt):
@@ -31,7 +30,7 @@ class Worker:
             "stream": True
         }
         
-        await self.send(message=MODEL)
+        await self.send(message=MessageModel(text=MODEL))
         
         async with httpx.AsyncClient() as client:
             async with client.stream("POST", OLLAMA_URL, json=payload) as response:
@@ -62,7 +61,7 @@ class Worker:
                     case ServerWorkerActionType.PROMPT:
                         await self.prompt(prompt=data["content"]["prompt"])
                     case _:
-                        await self.send(message="Unknown action", message_status=StatusType.ERROR)
+                        await self.send(message=MessageModel(text="Unknown action", status=StatusType.ERROR))
 
     async def connect(self):
         headers = {"Cookie": f"access_key={config.WORKER_ACCESS_KEY}"}

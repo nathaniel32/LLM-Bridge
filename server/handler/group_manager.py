@@ -14,11 +14,10 @@ class GroupManager:
         self.client_connections: List[WebSocket] = []
         self.worker_connection: Optional["WorkerConnection"] = None
 
-    async def send(self, message=None, message_status=StatusType.INFO, content=None, action=ServerClientActionType.LOG, connections=None):
+    async def send(self, message=None, content=None, action=ServerClientActionType.LOG, connections=None):
         if connections is None:
             connections = self.client_connections
 
-        message = MessageModel(text=message, status=message_status)
         await ws_response(websockets=connections, action=action, message=message, content=content)
 
     async def _event_listener(self, websocket:WebSocket):
@@ -37,9 +36,9 @@ class GroupManager:
                                 self.status = JobStatus.QUEUED
                                 await self.send(content=ClientContent(job_status=self.status))
                             case _:
-                                await self.send(message="Unknown action", message_status=StatusType.ERROR)
+                                await self.send(message=MessageModel(text="Unknown action", status=StatusType.ERROR))
                     except Exception as e:
-                        await self.send(message=str(e), message_status=StatusType.ERROR)
+                        await self.send(message=MessageModel(text=str(e), status=StatusType.ERROR))
 
         except WebSocketDisconnect:
             logging.info("WebSocket disconnected")
@@ -50,7 +49,7 @@ class GroupManager:
 
     async def start_process(self):
         self.status = JobStatus.IN_PROGRESS
-        await self.send(message="Starting process...", content=ClientContent(job_status=self.status))
+        await self.send(message=MessageModel(text="Starting process..."), content=ClientContent(job_status=self.status))
         await self.worker_connection.prompt(self)
 
     async def bind(self, websocket:WebSocket):

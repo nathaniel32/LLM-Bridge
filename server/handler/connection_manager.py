@@ -1,5 +1,5 @@
 from server.handler.group_manager import GroupManager
-from server.handler.worker_connection import WorkerConnection
+from server.handler.worker_connection import WorkerConnection, MessageModel
 from typing import List
 import asyncio
 from common.models import StatusType
@@ -38,7 +38,7 @@ class ConnectionManager:
             if group_manager not in self.waiting_groups:
                 self.waiting_groups.append(group_manager)
             else:
-                await group_manager.send(message=f"already in waiting list at position {self.waiting_groups.index(group_manager) + 1}", message_status=StatusType.WARNING)
+                await group_manager.send(message=MessageModel(text=f"already in waiting list at position {self.waiting_groups.index(group_manager) + 1}", status=StatusType.WARNING))
         await self.dequeue_job()
 
     # add group manager
