@@ -4,7 +4,7 @@ from typing import TYPE_CHECKING, List, Optional
 from common.models import ClientServerActionType, ServerClientActionType, StatusType, JobStatus, ClientContent, MessageModel, ResponseModel, StreamResponseContent
 from server.utils import ws_response
 import logging
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 if TYPE_CHECKING:
     from server.handler.connection_manager import ConnectionManager
     from server.handler.worker_connection import WorkerConnection
@@ -13,25 +13,40 @@ class Interaction(BaseModel):
     prompt: str
     response: str
 
-class LiveInteraction(BaseModel):
+class ChatContext(BaseModel):
     prompt: Optional[str] = None
+    system: Optional[str] = None
+    interaction_history: List[Interaction] = []
     response_stream_history: List[StreamResponseContent] = []
 
-    def get_full_interaction(self) -> Interaction:
-        combined_response = "".join([item.response for item in self.response_stream_history])
-        return Interaction(prompt=self.prompt, response=combined_response)
-    
     def clear(self):
         self.prompt = None
         self.response_stream_history.clear()
+
+    def add_interaction(self) -> Interaction:
+        combined_response = "".join([item.response for item in self.response_stream_history])
+        interaction = Interaction(prompt=self.prompt, response=combined_response)
+        self.interaction_history.append(interaction)
+        return interaction
+    
+    def add_response_stream(self, response:StreamResponseContent):
+        self.response_stream_history.append(response)
+
+    def to_json_messages(self):
+        messages = []
+        if self.system:
+            messages.append({"role": "system", "content": self.system})
+        for interaction in self.interaction_history:
+            messages.append({"role": "user", "content": interaction.prompt})
+            messages.append({"role": "assistant", "content": interaction.response})
+        return json.dumps(messages, indent=2)
 
 class GroupManager:
     def __init__(self, connection_manager:"ConnectionManager"):
         self.connection_manager = connection_manager
         self.client_connections: List[WebSocket] = []
         self.worker_connection: Optional["WorkerConnection"] = None
-        self.interaction_history: List[Interaction] = []
-        self.live_interaction = LiveInteraction()
+        self.chat_context = ChatContext()
 
     async def send(self, message=None, content=None, action=None, connections=None):
         if connections is None:
@@ -40,7 +55,7 @@ class GroupManager:
         await ws_response(websockets=connections, action=action, message=message, content=content)
 
     async def prompt_handler(self, prompt):
-        self.live_interaction.prompt = prompt
+        self.chat_context.prompt = prompt
         await self.connection_manager.enqueue_job(group_manager=self)
         self.status = JobStatus.QUEUED
         await self.send(content=ClientContent(job_status=self.status))
@@ -49,8 +64,7 @@ class GroupManager:
         self.status = JobStatus.IN_PROGRESS
         await self.send(message=MessageModel(text="Starting process..."), content=ClientContent(job_status=self.status))
         await self.worker_connection.send_job(self)
-        self.interaction_history.append(self.live_interaction.get_full_interaction())
-        self.live_interaction.clear()
+        self.chat_context.add_interaction()
 
     async def _event_listener(self, websocket:WebSocket):
         try:

@@ -25,7 +25,7 @@ class WorkerConnection:
                 self.job_event = asyncio.Event()
                 self.group_manager = group_manager
                 await self.group_manager.send(message=MessageModel(text="Sending Job to Worker..."))
-                await self.send(action=ServerWorkerActionType.CREATE_JOB, content=CreateJobContent(payload=group_manager.live_interaction.prompt))
+                await self.send(action=ServerWorkerActionType.CREATE_JOB, content=CreateJobContent(payload=group_manager.chat_context.prompt))
                 await self.job_event.wait()
             finally:
                 self.job_event = None
@@ -47,7 +47,7 @@ class WorkerConnection:
 
                         match response_model.action:    
                             case WorkerServerActionType.STREAM_RESPONSE:
-                                self.group_manager.live_interaction.response_stream_history.append(response_model.content)
+                                self.group_manager.chat_context.add_response_stream(response_model.content)
                                 await self.group_manager.send(content=ClientContent(response_stream=response_model.content))
                             case WorkerServerActionType.ABORTED:
                                 pass
