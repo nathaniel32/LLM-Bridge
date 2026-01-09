@@ -1,6 +1,7 @@
 from typing import Optional, Union
 from enum import Enum
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
+from uuid import uuid4
 
 class JobStatus(str, Enum):
     QUEUED = "queued"
@@ -17,6 +18,17 @@ class StatusType(str, Enum):
 
 #############################################################################################
 
+class Interaction(BaseModel):
+    id: str = Field(default_factory=lambda: uuid4().hex)
+    prompt: str
+    response: str = ""
+
+    def add_response_chunk(self, chunk):
+        self.response += chunk
+        return self.response
+
+#############################################################################################
+
 class ResponseStreamContent(BaseModel):
     response: str
 
@@ -25,8 +37,7 @@ class CreateJobContent(BaseModel):
 
 class ClientContent(BaseModel):
     job_status: Optional[JobStatus] = None
-    prompt: Optional[str] = None
-    #response: Optional[str] = None
+    interaction: Optional[Interaction] = None
     response_stream: Optional[ResponseStreamContent] = None
     queue_position: Optional[int] = None
     worker_num: Optional[int] = None

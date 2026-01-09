@@ -1,24 +1,14 @@
 import json
 from fastapi import WebSocket, WebSocketDisconnect
 from typing import TYPE_CHECKING, List, Optional
-from common.models import ClientServerActionType, StatusType, JobStatus, ClientContent, MessageModel, ResponseModel
+from common.models import ClientServerActionType, StatusType, JobStatus, ClientContent, MessageModel, ResponseModel, Interaction
 from server.utils import ws_response
 import logging
-from pydantic import BaseModel, Field
-from uuid import uuid4
+from pydantic import BaseModel
 
 if TYPE_CHECKING:
     from server.handler.connection_manager import ConnectionManager
     from server.handler.worker_connection import WorkerConnection
-
-class Interaction(BaseModel):
-    id: str = Field(default_factory=lambda: uuid4().hex)
-    prompt: str
-    response: str = ""
-
-    def add_response_chunk(self, chunk):
-        self.response += chunk
-        return self.response
 
 class ChatContext(BaseModel):
     system: Optional[str] = "You are a helpful assistant."
