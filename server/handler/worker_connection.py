@@ -26,6 +26,7 @@ class WorkerConnection:
                 self.group_manager = group_manager
                 await self.group_manager.send("Sending Job to Worker...")
                 await self.send(action=ServerWorkerActionType.PROMPT, content=PromptContent(prompt="ok"))
+                await self.job_event.wait()
             finally:
                 self.job_event = None
                 self.group_manager = None
@@ -44,7 +45,7 @@ class WorkerConnection:
 
                         match action:
                             case WorkerServerActionType.LOG:
-                                self.group_manager.send(message="ok")
+                                await self.group_manager.send(message="ok")
                             case _:
                                 await self.send(message="Unknown action", message_status=StatusType.ERROR)
                     except Exception:

@@ -38,7 +38,7 @@ class ConnectionManager:
             if group_manager not in self.waiting_groups:
                 self.waiting_groups.append(group_manager)
             else:
-                await group_manager.send(message=f"already in waiting list at position {self.waiting_groups.index(group_manager) + 1}", status_type=StatusType.WARNING)
+                await group_manager.send(message=f"already in waiting list at position {self.waiting_groups.index(group_manager) + 1}", message_status=StatusType.WARNING)
         await self.dequeue_job()
 
     # add group manager
