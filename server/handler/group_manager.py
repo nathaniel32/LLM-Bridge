@@ -60,7 +60,6 @@ class GroupManager:
                 if event_data.get("text"):
                     try:
                         response_model = ResponseModel(**json.loads(event_data["text"]))
-                        print(response_model)
                         
                         match response_model.action:
                             case ClientServerActionType.PROMPT:

@@ -9,6 +9,4 @@ class Frontend:
         self.router.add_api_route("/", self.root, methods=["GET"])
 
     async def root(self, request: Request):
-        print(config.WORKER_ACCESS_KEY)
-        print(BASE_DIR)
         return FileResponse(os.path.join(BASE_DIR, ".frontend", "index.html"))

@@ -1,6 +1,8 @@
 from websockets.client import ClientProtocol
 from common.models import ResponseModel, MessageModel
 from typing import Optional
+import logging
+
 async def ws_response(
     websocket: ClientProtocol,
     action,
@@ -11,4 +13,4 @@ async def ws_response(
     try:
         await websocket.send(response.model_dump_json())
     except Exception as e:
-        print(f"Error sending to websocket: {e}")
+        logging.error(f"Error sending to websocket: {e}")

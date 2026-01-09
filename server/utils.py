@@ -1,6 +1,7 @@
 from common.models import ResponseModel, MessageModel
 from fastapi import WebSocket
 from typing import List, Optional
+import logging
 
 async def ws_response(
     websockets: List[WebSocket],
@@ -13,4 +14,4 @@ async def ws_response(
         try:
             await websocket.send_json(response.model_dump())
         except Exception as e:
-            print(f"Error sending to websocket: {e}")
+            logging.error(f"Error sending to websocket: {e}")
