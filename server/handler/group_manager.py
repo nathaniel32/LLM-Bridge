@@ -32,7 +32,7 @@ class GroupManager:
         await ws_response(websockets=connections, action=action, message=message, content=content)
 
     async def prompt_handler(self, prompt):
-        self.prompt = prompt
+        self.live_interaction.prompt = prompt
         await self.connection_manager.enqueue_job(group_manager=self)
         self.status = JobStatus.QUEUED
         await self.send(content=ClientContent(job_status=self.status))
