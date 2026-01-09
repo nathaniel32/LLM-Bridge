@@ -1,6 +1,6 @@
 from typing import TYPE_CHECKING, Optional
 from fastapi import WebSocket, WebSocketDisconnect
-from common.models import WorkerServerActionType, StatusType
+from common.models import WorkerServerActionType, StatusType, ServerWorkerActionType, PromptContent
 import logging
 import json
 from server.handler.group_manager import GroupManager
@@ -25,6 +25,7 @@ class WorkerConnection:
                 self.job_event = asyncio.Event()
                 self.group_manager = group_manager
                 await self.group_manager.send("Sending Job to Worker...")
+                await self.send(action=ServerWorkerActionType.PROMPT, content=PromptContent(prompt="ok"))
             finally:
                 self.job_event = None
                 self.group_manager = None

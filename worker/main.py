@@ -28,7 +28,7 @@ class Worker:
                 data = json.loads(message)
                 action = data.get("action")
                 match action:
-                    case ServerWorkerActionType.LOG:
+                    case ServerWorkerActionType.PROMPT:
                         print(data)
                     case _:
                         await self.send(message="Unknown action", message_status=StatusType.ERROR)

@@ -1,5 +1,5 @@
 from websockets.client import ClientProtocol
-from common.models import ResponseModel
+from common.models import ResponseModel, MessageModel
 
 async def ws_response(
     websocket: ClientProtocol,
@@ -8,7 +8,8 @@ async def ws_response(
     message_status=None,
     content=None
 ) -> dict:
-    response = ResponseModel(action=action, message=message, message_status=message_status, content=content)
+    message_model = None if message is None else MessageModel(text=message, status=message_status)
+    response = ResponseModel(action=action, message=message_model, content=content)
     try:
         await websocket.send(response.model_dump_json())
     except Exception as e:
