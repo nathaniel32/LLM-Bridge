@@ -15,10 +15,8 @@ class GroupManager:
         self.worker_connection: Optional["WorkerConnection"] = None
 
     async def send(self, message=None, message_status=StatusType.INFO, content=None, action=ServerClientActionType.LOG, connections=None):
-        print(message)
         if connections is None:
             connections = self.client_connections
-
         await ws_response(websockets=connections, action=action, message=message, content=content, message_status=message_status)
 
     async def _message_listener(self, websocket:WebSocket):

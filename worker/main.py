@@ -17,7 +17,6 @@ class Worker:
     async def send(self, message=None, message_status=StatusType.INFO, content=None, action=WorkerServerActionType.LOG):
         if message:
             message = f"WORKER: {message}"
-            logging.info(message)
         await ws_response(websocket=self.connection, action=action, message=message, message_status=message_status, content=content)
 
     # server listener

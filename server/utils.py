@@ -11,7 +11,7 @@ async def ws_response(
 ) -> dict:
     message_model = None if message is None else MessageModel(text=message, status=message_status)
     response = ResponseModel(action=action, message=message_model, content=content)
-    #print(response.content)
+    print(response)
     for websocket in websockets:
         try:
             await websocket.send_json(response.model_dump())
