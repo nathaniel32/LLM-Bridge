@@ -31,6 +31,10 @@
         <div class="chat">
             <h2>LLM Chat</h2>
 
+            <input type="text" v-model="messageInput" placeholder="Type a message">
+            <button @click="sendMessage">Send</button>
+            <button @click="abortJob">Abort</button>
+
             <div v-for="item in interactions" :key="item.id" class="item">
                 <div class="prompt">
                     {{ item.prompt }}
@@ -40,9 +44,6 @@
                     {{ item.response }}
                 </div>
             </div>
-
-            <input type="text" v-model="messageInput" placeholder="Type a message">
-            <button @click="sendMessage">Send</button>
         </div>
     </div>
 
@@ -100,6 +101,11 @@
                     }));
 
                     this.messageInput = "";
+                },
+                abortJob() {
+                    this.ws.send(JSON.stringify({
+                        action: "abort_job"
+                    }));
                 },
                 requestEdit(item) {
                     const newPrompt = prompt("Edit prompt:", item.prompt);

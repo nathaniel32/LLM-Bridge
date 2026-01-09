@@ -45,6 +45,7 @@ class GroupManager:
         self.client_connections: List[WebSocket] = []
         self.worker_connection: Optional["WorkerConnection"] = None
         self.chat_context = ChatContext()
+        self.abort = False
 
     async def send(self, message=None, content=None, action=None, connections=None):
         if connections is None:
@@ -71,6 +72,12 @@ class GroupManager:
         await self.worker_connection.send_job(self)
         self.chat_context.finish_interaction()
 
+    async def abort_process(self):
+        self.abort = True
+        await self.send(message=MessageModel(text="trying to abort request...", status=StatusType.WARNING))
+        if self.worker_connection:
+            await self.worker_connection.abort_job()
+    
     async def _event_listener(self, websocket:WebSocket):
         try:
             while True:
@@ -83,6 +90,8 @@ class GroupManager:
                         match response_model.action:
                             case ClientServerActionType.CREATE_JOB:
                                 await self.create_job(prompt=response_model.content.input_text)
+                            case ClientServerActionType.ABORT_JOB:
+                                await self.abort_process()
                             case ClientServerActionType.EDIT_JOB:
                                 await self.edit_job(prompt=response_model.content.input_text, id=response_model.content.input_id)
                             case _:
@@ -97,6 +106,10 @@ class GroupManager:
             logging.error("Unexpected error in websocket listener")
         finally:
             logging.info("END!")
+
+            if websocket in self.client_connections:
+                self.client_connections.remove(websocket)
+                print("Active Connections: ", len(self.client_connections))
 
     async def bind(self, websocket:WebSocket):
         self.client_connections.append(websocket)
