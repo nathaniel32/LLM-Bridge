@@ -22,7 +22,7 @@ class ResponseStreamContent(BaseModel):
     response: str
 
 class CreateJobContent(BaseModel):
-    payload: str
+    text_input: str
 
 class ClientContent(BaseModel):
     job_status: Optional[JobStatus] = None

@@ -25,7 +25,7 @@ class WorkerConnection:
                 self.job_event = asyncio.Event()
                 self.group_manager = group_manager
                 await self.group_manager.send(message=MessageModel(text="Sending Job to Worker..."))
-                await self.send(action=ServerWorkerActionType.CREATE_JOB, content=CreateJobContent(payload=group_manager.chat_context.get_chat_message()))
+                await self.send(action=ServerWorkerActionType.CREATE_JOB, content=CreateJobContent(text_input=group_manager.chat_context.get_chat_message()))
                 await self.job_event.wait()
             finally:
                 self.job_event = None

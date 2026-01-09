@@ -31,7 +31,7 @@
             const message = {
                 action: "create_job",
                 content: {
-                    payload: input.value
+                    text_input: input.value
                 }
             };
             ws.send(JSON.stringify(message));
