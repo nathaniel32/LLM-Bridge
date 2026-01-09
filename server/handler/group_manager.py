@@ -1,7 +1,7 @@
 import json
 from fastapi import WebSocket, WebSocketDisconnect
 from typing import TYPE_CHECKING, List, Optional
-from common.models import ClientServerActionType, StatusType, JobStatus, ClientContent, MessageModel, ResponseModel
+from common.models import ClientServerActionType, StatusType, JobStatus, ClientContent, MessageModel, ResponseModel, AbortException
 from server.utils import ws_response
 import logging
 from server.models import JobRequestError, ChatContext
@@ -42,10 +42,21 @@ class GroupManager:
         await self.register_job()
 
     async def start_process(self):
-        self.status = JobStatus.IN_PROGRESS
-        await self.send(message=MessageModel(text="Starting process..."), content=ClientContent(job_status=self.status))
-        await self.worker_connection.send_job(self)
-        self.chat_context.finish_interaction()
+        try:
+            self.status = JobStatus.IN_PROGRESS
+            await self.send(message=MessageModel(text="Starting process..."), content=ClientContent(job_status=self.status))
+            await self.worker_connection.send_job(self)
+            
+            self.status = JobStatus.COMPLETED
+            await self.send(message=MessageModel(text="Process completed!"), content=ClientContent(job_status=self.status))
+        except AbortException as e:
+            self.status = JobStatus.ABORTED
+            await self.send(message=MessageModel(text=str(e), status=StatusType.WARNING), content=ClientContent(job_status=self.status))
+        except Exception as e:
+            self.status = JobStatus.FAILED
+            await self.send(message=MessageModel(text=str(e), status=StatusType.ERROR), content=ClientContent(job_status=self.status))
+        finally:
+            self.chat_context.finish_interaction()
 
     async def abort_process(self):
         self.abort = True

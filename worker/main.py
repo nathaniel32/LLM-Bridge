@@ -90,8 +90,8 @@ class Worker:
                         messages = json.loads(response_model.content.input_text)
                         current_task = asyncio.create_task(self.stream_chat(messages=messages))
                     case ServerWorkerActionType.ABORT_JOB:
+                        await self.send(action=WorkerServerActionType.ABORTED)
                         current_task.cancel()
-                        await self.send(message=MessageModel(text="Abort Request", status=StatusType.ERROR))
                     case _:
                         await self.send(message=MessageModel(text="Unknown action", status=StatusType.ERROR))
 

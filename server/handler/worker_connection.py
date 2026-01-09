@@ -46,6 +46,7 @@ class WorkerConnection:
             finally:
                 self.job_event = None
                 self.group_manager = None
+                self.worker_unsuccess_action = None
                 await self.connection_manager.dequeue_job()
         else:
             raise Exception("Worker busy, please try again later!")
@@ -85,7 +86,7 @@ class WorkerConnection:
             logging.info("Worker disconnected!")
             await self.connection_manager.remove_worker_connection(connection=self)
             if self.job_event:
-                await self.group_manager.send(message=MessageModel(text=str(e), status=StatusType.ERROR))
+                await self.group_manager.send(message=MessageModel(text="Worker disconnected!", status=StatusType.ERROR))
                 self.worker_unsuccess_action = WorkerServerActionType.ERROR
                 self.job_event.set()
             
