@@ -1,7 +1,7 @@
 import json
 from fastapi import WebSocket, WebSocketDisconnect
 from typing import TYPE_CHECKING, List, Optional
-from common.models import ClientServerActionType, ServerClientActionType, StatusType, JobStatus, ClientContent, MessageModel, ResponseModel
+from common.models import ClientServerActionType, ServerClientActionType, StatusType, JobStatus, ClientContent, MessageModel, ResponseModel, StreamResponseContent
 from server.utils import ws_response
 import logging
 from pydantic import BaseModel
@@ -15,7 +15,7 @@ class Interaction(BaseModel):
 
 class LiveInteraction(BaseModel):
     prompt: Optional[str] = None
-    response_stream: Optional[List[str]] = []
+    response_stream: List[StreamResponseContent] = []
 
 class GroupManager:
     def __init__(self, connection_manager:"ConnectionManager"):
