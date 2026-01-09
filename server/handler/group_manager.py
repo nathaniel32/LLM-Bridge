@@ -5,11 +5,14 @@ from common.models import ClientServerActionType, ServerClientActionType, Status
 from server.utils import ws_response
 import logging
 from pydantic import BaseModel, Field
+from uuid import uuid4
+
 if TYPE_CHECKING:
     from server.handler.connection_manager import ConnectionManager
     from server.handler.worker_connection import WorkerConnection
 
 class Interaction(BaseModel):
+    id: str = Field(default_factory=lambda: uuid4().hex)
     prompt: str
     response: str = ""
 
@@ -22,11 +25,12 @@ class ChatContext(BaseModel):
     interaction_history: List[Interaction] = []
     active_interaction: Optional[Interaction] = None
 
-    def start_interaction(self, prompt):
+    def create_interaction(self, prompt):
         self.active_interaction = Interaction(prompt=prompt)
+        self.interaction_history.append(self.active_interaction)
 
     def finish_interaction(self):
-        self.interaction_history.append(self.active_interaction)
+        self.active_interaction = None
     
     def get_chat_message(self):
         messages = []
@@ -34,8 +38,10 @@ class ChatContext(BaseModel):
             messages.append({"role": "system", "content": self.system})
         for interaction in self.interaction_history:
             messages.append({"role": "user", "content": interaction.prompt})
-            messages.append({"role": "assistant", "content": interaction.response})
-        messages.append({"role": "user", "content": self.active_interaction.prompt})
+            if interaction is not self.active_interaction:
+                messages.append({"role": "assistant", "content": interaction.response})
+            else:
+                break
         return json.dumps(messages)
 
 class GroupManager:
@@ -52,7 +58,7 @@ class GroupManager:
         await ws_response(websockets=connections, action=action, message=message, content=content)
 
     async def prompt_handler(self, prompt):
-        self.chat_context.start_interaction(prompt)
+        self.chat_context.create_interaction(prompt)
         await self.connection_manager.enqueue_job(group_manager=self)
         self.status = JobStatus.QUEUED
         await self.send(content=ClientContent(job_status=self.status))
