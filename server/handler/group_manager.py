@@ -5,6 +5,7 @@ from common.models import ClientServerActionType, StatusType, JobStatus, ClientC
 from server.utils import ws_response
 import logging
 from pydantic import BaseModel
+from server.models import WaitingListError
 
 if TYPE_CHECKING:
     from server.handler.connection_manager import ConnectionManager
@@ -100,8 +101,10 @@ class GroupManager:
                                 await self.edit_job(prompt=response_model.content.input_text, id=response_model.content.input_id)
                             case _:
                                 await self.send(message=MessageModel(text="Unknown action", status=StatusType.ERROR))
+
+                    except WaitingListError as e:
+                        await self.send(message=MessageModel(text=str(e), status=StatusType.WARNING))
                     except Exception as e:
-                        logging.exception(f"Error: {e}")
                         await self.send(message=MessageModel(text=str(e), status=StatusType.ERROR))
 
         except WebSocketDisconnect:

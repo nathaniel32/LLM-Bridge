@@ -1,0 +1,2 @@
+class WaitingListError(Exception):
+    pass
