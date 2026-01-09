@@ -3,43 +3,57 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>WS Demo</title>
+    <title>WS Demo with Vue</title>
+    <script src="https://cdn.jsdelivr.net/npm/vue@2/dist/vue.js"></script>
 </head>
 <body>
-    <h1>WebSocket Demo</h1>
-    <input type="text" id="messageInput" placeholder="Type a message"/>
-    <button onclick="sendMessage()">Send</button>
-    <ul id="messages"></ul>
+    <div id="app">
+        <h1>WebSocket Demo</h1>
+        <input type="text" v-model="messageInput" placeholder="Type a message"/>
+        <button @click="sendMessage">Send</button>
+        <ul>
+            <li v-for="(msg, index) in messages" :key="index">{{ msg }}</li>
+        </ul>
+    </div>
 
     <script>
-        const ws = new WebSocket("ws://localhost:9050/connection/client");
-        const messages = document.getElementById("messages");
+        new Vue({
+        el: "#app",
+        data: {
+            ws: null,
+            messageInput: "",
+            messages: []
+        },
+        created() {
+            this.ws = new WebSocket("ws://localhost:9050/connection/client");
 
-        ws.onopen = () => {
-            console.log("Connected to server");
-        }
+            this.ws.onopen = () => {
+                console.log("Connected to server");
+            };
 
-        ws.onmessage = (event) => {
-            const data = JSON.parse(event.data);
-            const li = document.createElement("li");
-            li.textContent = data.content.interaction.response;
-            messages.appendChild(li);
-
-            console.log(data);
-        }
-
-        function sendMessage() {
-            const input = document.getElementById("messageInput");
-            const message = {
-                action: "create_job",
-                content: {
-                    text_input: input.value
+            this.ws.onmessage = (event) => {
+                try {
+                    const data = JSON.parse(event.data);
+                    const response = data.content?.interaction?.response;
+                    if (response) this.messages.push(response);
+                } catch (err) {
+                    console.error("Invalid message format:", event.data);
                 }
             };
-            ws.send(JSON.stringify(message));
-            input.value = "";
-            console.log(message);
+        },
+        methods: {
+            sendMessage() {
+                if (this.messageInput.trim() === "") return;
+
+                const message = {
+                    action: "create_job",
+                    content: { text_input: this.messageInput }
+                };
+                this.ws.send(JSON.stringify(message));
+                this.messageInput = "";
+            }
         }
+        });
     </script>
 </body>
 </html>
