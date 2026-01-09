@@ -30,6 +30,7 @@ class Worker:
                 match action:
                     case ServerWorkerActionType.PROMPT:
                         print(data)
+                        await self.send(message=data)
                     case _:
                         await self.send(message="Unknown action", message_status=StatusType.ERROR)
 
