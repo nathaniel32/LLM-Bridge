@@ -3,7 +3,7 @@ from typing import List, Optional
 from common.models import Interaction
 import json
 
-class WaitingListError(Exception):
+class JobRequestError(Exception):
     pass
 
 class ChatContext(BaseModel):
@@ -12,6 +12,9 @@ class ChatContext(BaseModel):
     active_interaction: Optional[Interaction] = None
 
     def create_interaction(self, prompt):
+        if self.active_interaction is not None:
+            raise JobRequestError("Active interaction already exists")
+        
         self.active_interaction = Interaction(prompt=prompt)
         self.interaction_history.append(self.active_interaction)
 
@@ -19,6 +22,9 @@ class ChatContext(BaseModel):
         self.active_interaction = None
 
     def edit_interaction(self, interaction_id, prompt):
+        if self.active_interaction is not None:
+            raise JobRequestError("Cannot edit while active interaction exists")
+        
         self.active_interaction = next((i for i in self.interaction_history if i.id == interaction_id), None)
         self.active_interaction.prompt = prompt
         self.active_interaction.response = ""

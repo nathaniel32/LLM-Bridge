@@ -4,8 +4,7 @@ from typing import TYPE_CHECKING, List, Optional
 from common.models import ClientServerActionType, StatusType, JobStatus, ClientContent, MessageModel, ResponseModel
 from server.utils import ws_response
 import logging
-from pydantic import BaseModel
-from server.models import WaitingListError, ChatContext
+from server.models import JobRequestError, ChatContext
 
 if TYPE_CHECKING:
     from server.handler.connection_manager import ConnectionManager
@@ -73,7 +72,7 @@ class GroupManager:
                             case _:
                                 await self.send(message=MessageModel(text="Unknown action", status=StatusType.ERROR))
 
-                    except WaitingListError as e:
+                    except JobRequestError as e:
                         await self.send(message=MessageModel(text=str(e), status=StatusType.WARNING))
                     except Exception as e:
                         await self.send(message=MessageModel(text=str(e), status=StatusType.ERROR))
