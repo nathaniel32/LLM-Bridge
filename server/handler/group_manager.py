@@ -39,6 +39,7 @@ class ChatContext(BaseModel):
         for interaction in self.interaction_history:
             messages.append({"role": "user", "content": interaction.prompt})
             messages.append({"role": "assistant", "content": interaction.response})
+        messages.append({"role": "user", "content": self.prompt})
         return json.dumps(messages, indent=2)
 
 class GroupManager:
