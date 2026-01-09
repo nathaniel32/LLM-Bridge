@@ -18,8 +18,8 @@ class StatusType(str, Enum):
 #############################################################################################
 
 class StreamResponseContent(BaseModel):
-    index: int
-    chunk: Optional[str] = None
+    created_at: str
+    response: str
 
 class PromptContent(BaseModel):
     prompt: str
@@ -27,7 +27,7 @@ class PromptContent(BaseModel):
 class ClientContent(BaseModel):
     job_status: Optional[JobStatus] = None
     response: Optional[str] = None
-    stream_response: Optional[StreamResponseContent] = None
+    response_chunk: Optional[StreamResponseContent] = None
     queue_position: Optional[int] = None
     worker_num: Optional[int] = None
     group_num: Optional[int] = None
