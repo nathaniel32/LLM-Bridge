@@ -11,28 +11,23 @@ if TYPE_CHECKING:
 
 class Interaction(BaseModel):
     prompt: str
-    response: str
+    response: str = ""
+
+    def add_response_chunk(self, chunk):
+        self.response += chunk
+        return self.response
 
 class ChatContext(BaseModel):
-    prompt: Optional[str] = None
     system: Optional[str] = "You are a helpful assistant."
     interaction_history: List[Interaction] = []
-    response_stream_history: List[ResponseStreamContent] = []
+    active_interaction: Optional[Interaction] = None
 
-    def clear(self):
-        self.prompt = None
-        self.response_stream_history.clear()
+    def start_interaction(self, prompt):
+        self.active_interaction = Interaction(prompt=prompt)
 
-    def add_interaction(self) -> Interaction:
-        combined_response = "".join([item.response for item in self.response_stream_history])
-        interaction = Interaction(prompt=self.prompt, response=combined_response)
-        self.interaction_history.append(interaction)
-        self.clear()
-        return interaction
+    def finish_interaction(self):
+        self.interaction_history.append(self.active_interaction)
     
-    def add_response_stream(self, response:ResponseStreamContent):
-        self.response_stream_history.append(response)
-
     def get_chat_message(self):
         messages = []
         if self.system:
@@ -40,7 +35,7 @@ class ChatContext(BaseModel):
         for interaction in self.interaction_history:
             messages.append({"role": "user", "content": interaction.prompt})
             messages.append({"role": "assistant", "content": interaction.response})
-        messages.append({"role": "user", "content": self.prompt})
+        messages.append({"role": "user", "content": self.active_interaction.prompt})
         return json.dumps(messages, indent=2)
 
 class GroupManager:
@@ -57,7 +52,7 @@ class GroupManager:
         await ws_response(websockets=connections, action=action, message=message, content=content)
 
     async def prompt_handler(self, prompt):
-        self.chat_context.prompt = prompt
+        self.chat_context.start_interaction(prompt)
         await self.connection_manager.enqueue_job(group_manager=self)
         self.status = JobStatus.QUEUED
         await self.send(content=ClientContent(job_status=self.status))
@@ -66,7 +61,7 @@ class GroupManager:
         self.status = JobStatus.IN_PROGRESS
         await self.send(message=MessageModel(text="Starting process..."), content=ClientContent(job_status=self.status))
         await self.worker_connection.send_job(self)
-        self.chat_context.add_interaction()
+        self.chat_context.finish_interaction()
 
     async def _event_listener(self, websocket:WebSocket):
         try:

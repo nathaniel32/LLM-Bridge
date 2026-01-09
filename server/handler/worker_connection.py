@@ -47,7 +47,7 @@ class WorkerConnection:
 
                         match response_model.action:    
                             case WorkerServerActionType.STREAM_RESPONSE:
-                                self.group_manager.chat_context.add_response_stream(response_model.content)
+                                self.group_manager.chat_context.active_interaction.add_response_chunk(response_model.content.response)
                                 await self.group_manager.send(content=ClientContent(response_stream=response_model.content))
                             case WorkerServerActionType.ABORTED:
                                 pass
