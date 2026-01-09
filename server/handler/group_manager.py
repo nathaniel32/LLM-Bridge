@@ -33,7 +33,7 @@ class GroupManager:
         self.interaction_history: List[Interaction] = []
         self.live_interaction = LiveInteraction()
 
-    async def send(self, message=None, content=None, action=ServerClientActionType.LOG, connections=None):
+    async def send(self, message=None, content=None, action=None, connections=None):
         if connections is None:
             connections = self.client_connections
 

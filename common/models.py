@@ -42,18 +42,15 @@ class ClientServerActionType(str, Enum): # client - server
 
 # action to control client from Server
 class ServerClientActionType(str, Enum): # server - client
-    LOG = "log"
     HEARTBEAT = "heartbeat"
 
 # action to control worker from python server
 class ServerWorkerActionType(str, Enum): # server - worker
-    LOG = "log"
     ABORT_REQUEST = "abort_request"
     PROMPT = "prompt"
 
 # action to control python server from worker
 class WorkerServerActionType(str, Enum): # worker - server
-    LOG = "log"
     STREAM_RESPONSE = "stream_response"
     END = "end"
     ABORTED = "aborted"
@@ -66,6 +63,6 @@ class MessageModel(BaseModel):
     status: StatusType = StatusType.INFO
 
 class ResponseModel(BaseModel):
-    action: Union[ServerClientActionType, ClientServerActionType, ServerWorkerActionType, WorkerServerActionType]
+    action: Optional[Union[ServerClientActionType, ClientServerActionType, ServerWorkerActionType, WorkerServerActionType]] = None
     message: Optional[MessageModel] = None
     content: Optional[Union[ClientContent, PromptContent, StreamResponseContent]] = None

@@ -16,7 +16,7 @@ class WorkerConnection:
         self.job_event: Optional[asyncio.Event] = None
         self.group_manager: Optional[GroupManager] = None
 
-    async def send(self, action, content=None):
+    async def send(self, action=None, content=None):
         await ws_response(websockets=[self.connection], action=action, content=content)
 
     async def prompt(self, group_manager:GroupManager):
@@ -42,11 +42,10 @@ class WorkerConnection:
                 if event_data.get("text"):
                     try:
                         response_model = ResponseModel(**json.loads(event_data["text"]))
-                        print(response_model)
 
-                        match response_model.action:
-                            case WorkerServerActionType.LOG:
-                                await self.group_manager.send(message=response_model.message)
+                        await self.group_manager.send(message=response_model.message)
+
+                        match response_model.action:    
                             case WorkerServerActionType.STREAM_RESPONSE:
                                 self.group_manager.live_interaction.response_stream_history.append(response_model.content)
                                 await self.group_manager.send(content=ClientContent(response_stream=response_model.content))
@@ -57,9 +56,9 @@ class WorkerConnection:
                             case WorkerServerActionType.END:
                                 self.job_event.set()
                             case _:
-                                await self.group_manager.send(message=MessageModel(text="Worker-Server Unknown action", status=StatusType.ERROR))
-                    except Exception:
-                        await self.group_manager.send(message=MessageModel(text=event_data.get("text"), status=StatusType.ERROR))
+                                pass
+                    except Exception as e:
+                        await self.group_manager.send(message=MessageModel(text=str(e), status=StatusType.ERROR))
 
         except WebSocketDisconnect:
             logging.info("WebSocket disconnected")

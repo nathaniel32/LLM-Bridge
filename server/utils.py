@@ -9,7 +9,6 @@ async def ws_response(
     content = None
 ) -> dict:
     response = ResponseModel(action=action, message=message, content=content)
-    print(message)
     for websocket in websockets:
         try:
             await websocket.send_json(response.model_dump())

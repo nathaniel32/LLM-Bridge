@@ -15,7 +15,7 @@ class Worker:
         self.connection = None
         self.ssl_context = ssl.create_default_context(cafile=certifi.where()) if url.startswith("wss://") else None
 
-    async def send(self, message:MessageModel=None, content=None, action=WorkerServerActionType.LOG):
+    async def send(self, message:MessageModel=None, content=None, action=None):
         if message:
             message.text = f"WORKER: {message.text}"
         await ws_response(websocket=self.connection, action=action, message=message, content=content)
