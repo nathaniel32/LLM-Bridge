@@ -95,7 +95,7 @@
                     this.ws.send(JSON.stringify({
                         action: "create_job",
                         content: {
-                            text_input: this.messageInput
+                            input_text: this.messageInput
                         }
                     }));
 
@@ -108,8 +108,8 @@
                     this.ws.send(JSON.stringify({
                         action: "edit_job",
                         content: {
-                            interaction_id: item.id,
-                            prompt: newPrompt
+                            input_id: item.id,
+                            input_text: newPrompt
                         }
                     }));
                 }

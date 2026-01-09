@@ -32,8 +32,9 @@ class Interaction(BaseModel):
 class ResponseStreamContent(BaseModel):
     response: str
 
-class CreateJobContent(BaseModel):
-    text_input: str
+class InputJobContent(BaseModel):
+    input_id: Optional[str] = None
+    input_text: str
 
 class ClientContent(BaseModel):
     job_status: Optional[JobStatus] = None
@@ -49,6 +50,7 @@ class ClientContent(BaseModel):
 class ClientServerActionType(str, Enum): # client - server
     ABORT_REQUEST = "abort_request"
     CREATE_JOB = "create_job"
+    EDIT_JOB = "edit_job"
 
 # action to control client from Server
 class ServerClientActionType(str, Enum): # server - client
@@ -75,4 +77,4 @@ class MessageModel(BaseModel):
 class ResponseModel(BaseModel):
     action: Optional[Union[ServerClientActionType, ClientServerActionType, ServerWorkerActionType, WorkerServerActionType]] = None
     message: Optional[MessageModel] = None
-    content: Optional[Union[ClientContent, CreateJobContent, ResponseStreamContent]] = None
+    content: Optional[Union[ClientContent, InputJobContent, ResponseStreamContent]] = None

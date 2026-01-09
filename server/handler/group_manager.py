@@ -52,11 +52,18 @@ class GroupManager:
 
         await ws_response(websockets=connections, action=action, message=message, content=content)
 
-    async def prompt_handler(self, prompt):
-        self.chat_context.create_interaction(prompt)
+    async def register_job(self):
         await self.connection_manager.enqueue_job(group_manager=self)
         self.status = JobStatus.QUEUED
         await self.send(content=ClientContent(job_status=self.status))
+
+    async def create_job(self, prompt):
+        self.chat_context.create_interaction(prompt)
+        await self.register_job()
+    
+    async def edit_job(self, prompt, id):
+        self.chat_context.edit_interaction(id, prompt)
+        await self.register_job()
 
     async def start_process(self):
         self.status = JobStatus.IN_PROGRESS
@@ -75,7 +82,9 @@ class GroupManager:
                         
                         match response_model.action:
                             case ClientServerActionType.CREATE_JOB:
-                                await self.prompt_handler(prompt=response_model.content.text_input)
+                                await self.create_job(prompt=response_model.content.input_text)
+                            case ClientServerActionType.EDIT_JOB:
+                                await self.edit_job(prompt=response_model.content.input_text, id=response_model.content.input_id)
                             case _:
                                 await self.send(message=MessageModel(text="Unknown action", status=StatusType.ERROR))
                     except Exception as e:

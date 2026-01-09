@@ -85,7 +85,7 @@ class Worker:
                 response_model = ResponseModel(**json.loads(event_data))
                 match response_model.action:
                     case ServerWorkerActionType.CREATE_JOB:
-                        messages = json.loads(response_model.content.text_input)
+                        messages = json.loads(response_model.content.input_text)
                         await self.stream_chat(messages=messages)
                     case _:
                         await self.send(message=MessageModel(text="Unknown action", status=StatusType.ERROR))
