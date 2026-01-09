@@ -34,6 +34,7 @@ class Worker:
         
         try:
             print("\n\n==== INPUT:", messages)
+            print(type(messages))
             print("====AI:")
             async with httpx.AsyncClient() as client:
                 async with client.stream("POST", OLLAMA_URL, json=payload) as response:
@@ -54,6 +55,7 @@ class Worker:
         except:
             await self.send(action=WorkerServerActionType.ERROR)
         finally:
+            print("\nEND!")
             await self.send(action=WorkerServerActionType.END)
 
     # server listener
@@ -64,7 +66,8 @@ class Worker:
                 response_model = ResponseModel(**json.loads(event_data))
                 match response_model.action:
                     case ServerWorkerActionType.CREATE_JOB:
-                        await self.stream_chat(messages=response_model.content.payload)
+                        messages = json.loads(response_model.content.payload)
+                        await self.stream_chat(messages=messages)
                     case _:
                         await self.send(message=MessageModel(text="Unknown action", status=StatusType.ERROR))
 
