@@ -20,20 +20,20 @@ class Worker:
             message.text = f"WORKER: {message.text}"
         await ws_response(websocket=self.connection, action=action, message=message, content=content)
 
-    async def prompt(self, prompt):
+    async def stream_chat(self, messages):
         OLLAMA_URL = "http://localhost:11434/api/generate"
         MODEL = "gemma3:4b"
         
         payload = {
             "model": MODEL,
-            "prompt": prompt,
+            "messages": messages,
             "stream": True
         }
         
         await self.send(message=MessageModel(text=MODEL))
         
         try:
-            print("\n\n==== Client:", prompt)
+            print("\n\n==== INPUT:", messages)
             print("====AI:")
             async with httpx.AsyncClient() as client:
                 async with client.stream("POST", OLLAMA_URL, json=payload) as response:
@@ -64,7 +64,7 @@ class Worker:
                 response_model = ResponseModel(**json.loads(event_data))
                 match response_model.action:
                     case ServerWorkerActionType.CREATE_JOB:
-                        await self.prompt(prompt=response_model.content.payload)
+                        await self.stream_chat(messages=response_model.content.payload)
                     case _:
                         await self.send(message=MessageModel(text="Unknown action", status=StatusType.ERROR))
 
