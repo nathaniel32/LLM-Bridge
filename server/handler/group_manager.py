@@ -15,7 +15,7 @@ class Interaction(BaseModel):
 
 class ChatContext(BaseModel):
     prompt: Optional[str] = None
-    system: Optional[str] = None
+    system: Optional[str] = "You are a helpful assistant."
     interaction_history: List[Interaction] = []
     response_stream_history: List[ResponseStreamContent] = []
 
