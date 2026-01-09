@@ -1,7 +1,7 @@
-from fastapi import APIRouter, status, Request
-from fastapi.responses import HTMLResponse, FileResponse
+from fastapi import APIRouter, Request
+from fastapi.responses import FileResponse
 import os
-from server.setting import BASE_DIR, config
+from server.setting import BASE_DIR
 
 class Frontend:
     def __init__(self):
