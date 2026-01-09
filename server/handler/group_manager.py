@@ -48,7 +48,7 @@ class GroupManager:
     async def start_process(self):
         self.status = JobStatus.IN_PROGRESS
         await self.send(message=MessageModel(text="Starting process..."), content=ClientContent(job_status=self.status))
-        await self.worker_connection.prompt(self)
+        await self.worker_connection.send_job(self)
         self.interaction_history.append(self.live_interaction.get_full_interaction())
         self.live_interaction.clear()
 
@@ -62,7 +62,7 @@ class GroupManager:
                         response_model = ResponseModel(**json.loads(event_data["text"]))
                         
                         match response_model.action:
-                            case ClientServerActionType.PROMPT:
+                            case ClientServerActionType.CREATE_JOB:
                                 await self.prompt_handler(prompt=response_model.content.prompt)
                             case _:
                                 await self.send(message=MessageModel(text="Unknown action", status=StatusType.ERROR))

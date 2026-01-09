@@ -21,7 +21,7 @@ class StreamResponseContent(BaseModel):
     created_at: str
     response: str
 
-class PromptContent(BaseModel):
+class CreateJobContent(BaseModel):
     prompt: str
 
 class ClientContent(BaseModel):
@@ -38,7 +38,7 @@ class ClientContent(BaseModel):
 # action to control server from client
 class ClientServerActionType(str, Enum): # client - server
     ABORT_REQUEST = "abort_request"
-    PROMPT = "prompt"
+    CREATE_JOB = "create_job"
 
 # action to control client from Server
 class ServerClientActionType(str, Enum): # server - client
@@ -47,7 +47,7 @@ class ServerClientActionType(str, Enum): # server - client
 # action to control worker from python server
 class ServerWorkerActionType(str, Enum): # server - worker
     ABORT_REQUEST = "abort_request"
-    PROMPT = "prompt"
+    CREATE_JOB = "create_job"
 
 # action to control python server from worker
 class WorkerServerActionType(str, Enum): # worker - server
@@ -65,4 +65,4 @@ class MessageModel(BaseModel):
 class ResponseModel(BaseModel):
     action: Optional[Union[ServerClientActionType, ClientServerActionType, ServerWorkerActionType, WorkerServerActionType]] = None
     message: Optional[MessageModel] = None
-    content: Optional[Union[ClientContent, PromptContent, StreamResponseContent]] = None
+    content: Optional[Union[ClientContent, CreateJobContent, StreamResponseContent]] = None
