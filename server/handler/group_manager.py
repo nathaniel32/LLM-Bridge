@@ -5,6 +5,7 @@ from common.models import ClientServerActionType, StatusType, JobStatus, ClientC
 from server.utils import ws_response
 import logging
 from server.models import JobRequestError, ChatContext
+from uuid import uuid4
 
 if TYPE_CHECKING:
     from server.handler.connection_manager import ConnectionManager
@@ -12,6 +13,7 @@ if TYPE_CHECKING:
 
 class GroupManager:
     def __init__(self, connection_manager:"ConnectionManager"):
+        self.id = uuid4().hex
         self.connection_manager = connection_manager
         self.client_connections: List[WebSocket] = []
         self.worker_connection: Optional["WorkerConnection"] = None
