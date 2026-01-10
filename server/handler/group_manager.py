@@ -20,11 +20,13 @@ class GroupManager:
         self.chat_context.reset_active_interaction()
         self.worker_connection = None
 
-    async def add_client(self, client_connection):
+    async def add_client(self, client_connection:"ClientConnection"):
         self.client_connections.append(client_connection)
+        await client_connection.send(message=MessageModel(text=f"Joined to {self.group_infos.id}"), content=ClientContent(joined_group_id=self.group_infos.id))
     
-    async def remove_client(self, client_connection):
+    async def remove_client(self, client_connection:"ClientConnection"):
         self.client_connections.remove(client_connection)
+        await client_connection.send(message=MessageModel(text=f"Leave from {self.group_infos.id}"), content=ClientContent(joined_group_id=""))
 
     async def send(self, message=None, content=None, action=None, client_connections=None):
         if client_connections is None:

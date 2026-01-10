@@ -52,6 +52,7 @@ class InputJobContent(BaseModel):
     input_text: Optional[str] = None
 
 class ClientContent(BaseModel):
+    joined_group_id: Optional[str] = None
     interaction: Optional[Interaction] = None
     queue_position: Optional[int] = None
     client_num: Optional[int] = None
