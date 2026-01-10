@@ -25,6 +25,7 @@ class ClientConnection(BaseConnection):
         await self.send(content=client_content)
 
     async def cleanup_connection(self):
+        if self.group_manager is not None: await self.group_manager.remove_client(self)
         await self.connection_manager.remove_client_connection(self)
 
     async def event_handler(self, response_model:ResponseModel):
@@ -42,7 +43,6 @@ class ClientConnection(BaseConnection):
                 if self.group_manager is None:
                     raise RequestError("Group not found!")
                 await self.group_manager.remove_client(self)
-                self.group_manager = None
             case ClientServerActionType.CREATE_INTERACTION:
                 if self.group_manager is None:
                     raise RequestError("Group not found!")
