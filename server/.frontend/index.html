@@ -222,7 +222,7 @@
                             </div>
                             <h3 class="text-xl font-semibold text-gray-800 mb-2">Start a conversation</h3>
                             <p class="text-gray-600">
-                                {{ joinedGroupId ? 'Type a message below to begin' : 'Join or create a group to start chatting' }}
+                                Type a message below to begin chatting
                             </p>
                         </div>
 
@@ -243,17 +243,16 @@
                                 <textarea 
                                     v-model="messageInput"
                                     @keydown.enter.exact.prevent="sendMessage"
-                                    :disabled="!joinedGroupId"
                                     placeholder="Type your message... (Press Enter to send)"
                                     rows="1"
-                                    class="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-all resize-none disabled:bg-gray-100 disabled:cursor-not-allowed"
+                                    class="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-all resize-none"
                                     style="max-height: 200px;"
                                 ></textarea>
                             </div>
                             <div class="flex gap-2">
                                 <button 
                                     @click="sendMessage"
-                                    :disabled="!messageInput.trim() || !joinedGroupId"
+                                    :disabled="!messageInput.trim()"
                                     class="px-6 py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-all disabled:bg-gray-300 disabled:cursor-not-allowed font-medium shadow-sm hover:shadow-md"
                                 >
                                     <i class="fas fa-paper-plane mr-2"></i>Send
