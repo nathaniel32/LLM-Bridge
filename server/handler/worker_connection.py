@@ -50,24 +50,19 @@ class WorkerConnection(BaseConnection):
         else:
             raise Exception("Worker busy, please try again later!")
 
-    async def event_handler(self, event_data):
-        try:
-            response_model = ResponseModel(**json.loads(event_data["text"]))
+    async def event_handler(self, response_model:ResponseModel):
+        await self.group_manager.send(message=response_model.message)
 
-            await self.group_manager.send(message=response_model.message)
-
-            match response_model.action:    
-                case WorkerServerActionType.STREAM_RESPONSE:
-                    assert isinstance(response_model.content, ResponseStreamContent)
-                    self.group_manager.chat_context.active_interaction.add_response_chunk(response_model.content.response)
-                    await self.group_manager.update_active_interaction() # stream
-                case WorkerServerActionType.ABORTED:
-                    self.worker_unsuccess_action = response_model.action
-                case WorkerServerActionType.ERROR:
-                    self.worker_unsuccess_action = response_model.action
-                case WorkerServerActionType.END:
-                    self.job_event.set()
-                case _:
-                    pass
-        except Exception as e:
-            logging.exception(f"Exception: {e}")
+        match response_model.action:    
+            case WorkerServerActionType.STREAM_RESPONSE:
+                assert isinstance(response_model.content, ResponseStreamContent)
+                self.group_manager.chat_context.active_interaction.add_response_chunk(response_model.content.response)
+                await self.group_manager.update_active_interaction() # stream
+            case WorkerServerActionType.ABORTED:
+                self.worker_unsuccess_action = response_model.action
+            case WorkerServerActionType.ERROR:
+                self.worker_unsuccess_action = response_model.action
+            case WorkerServerActionType.END:
+                self.job_event.set()
+            case _:
+                pass

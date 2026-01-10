@@ -2,6 +2,9 @@ from typing import TYPE_CHECKING, Optional
 from fastapi import WebSocket
 from server.handler.group_manager import GroupManager
 from server.handler.base_connection import BaseConnection
+from common.models import ResponseModel, ClientServerActionType, StatusType, MessageModel
+import json
+
 if TYPE_CHECKING:
     from server.handler.connection_manager import ConnectionManager
 
@@ -10,9 +13,12 @@ class ClientConnection(BaseConnection):
         super().__init__(connection_manager, connection)
         self.group_manager: Optional[GroupManager] = None
 
-    async def event_handler(self, event_data):
-        if self.group_manager is None: # dev mode
-            self.group_manager = await self.connection_manager.add_group_manager()
-            await self.group_manager.add_client(self)
-
-        await self.group_manager.event_handler(event_data)
+    async def event_handler(self, response_model:ResponseModel):
+        match response_model.action:
+            case ClientServerActionType.CREATE_INTERACTION:
+                if self.group_manager is None:
+                    self.group_manager = await self.connection_manager.add_group_manager()
+                    await self.group_manager.add_client(self)
+        
+        if self.group_manager is not None:
+            await self.group_manager.event_handler(response_model)

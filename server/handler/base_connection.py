@@ -3,6 +3,9 @@ from fastapi import WebSocket, WebSocketDisconnect
 from server.utils import ws_response
 import logging
 from abc import ABC, abstractmethod
+from common.models import MessageModel, StatusType, ResponseModel
+import json
+
 if TYPE_CHECKING:
     from server.handler.connection_manager import ConnectionManager
 
@@ -15,7 +18,7 @@ class BaseConnection(ABC):
         await ws_response(websockets=[self.connection], action=action, message=message, content=content)
 
     @abstractmethod
-    async def event_handler(self, event_data):
+    async def event_handler(self, response_model:ResponseModel):
         pass
 
     async def _event_listener(self):
@@ -24,7 +27,11 @@ class BaseConnection(ABC):
                 event_data = await self.connection.receive()
 
                 if event_data.get("text"):
-                    await self.event_handler(event_data)
+                    try:
+                        response_model = ResponseModel(**json.loads(event_data["text"]))
+                        await self.event_handler(response_model)
+                    except Exception as e:
+                        await self.send(message=MessageModel(text=str(e), status=StatusType.ERROR))
 
         except WebSocketDisconnect:
             logging.info("WebSocket disconnected")

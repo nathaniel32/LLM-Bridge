@@ -1,8 +1,6 @@
 import json
-from fastapi import WebSocket
 from typing import TYPE_CHECKING, List, Optional
 from common.models import ClientServerActionType, StatusType, JobStatus, ClientContent, MessageModel, ResponseModel, AbortException, GroupInfos
-from server.utils import ws_response
 from server.models import JobRequestError, ChatContext
 from uuid import uuid4
 
@@ -90,10 +88,8 @@ class GroupManager:
         interaction = self.chat_context.delete_interaction(interaction_id=interaction_id)
         await self.update_active_interaction(interaction=interaction)
 
-    async def event_handler(self, event_data):
+    async def event_handler(self, response_model:ResponseModel):
         try:
-            response_model = ResponseModel(**json.loads(event_data["text"]))
-            
             match response_model.action:
                 case ClientServerActionType.CREATE_INTERACTION:
                     await self.create_interaction(prompt=response_model.content.input_text)
