@@ -19,6 +19,12 @@ class GroupManager:
         self.abort = False
         self.job_status = JobStatus.IDLE
 
+    def reset_state(self):
+        self.chat_context.finish_interaction()
+        self.worker_connection = None
+        self.abort = False
+        self.job_status = JobStatus.IDLE
+
     async def send(self, message=None, content=None, action=None, connections=None):
         if connections is None:
             connections = self.client_connections
@@ -46,6 +52,9 @@ class GroupManager:
 
     async def start_process(self):
         try:
+            if self.abort:
+                raise AbortException("Abort in start process!")
+
             self.job_status = JobStatus.IN_PROGRESS
             await self.send(message=MessageModel(text="Starting process..."), content=ClientContent(job_status=self.job_status))
             await self.worker_connection.send_job(self)
@@ -59,7 +68,7 @@ class GroupManager:
             self.job_status = JobStatus.FAILED
             await self.send(message=MessageModel(text=str(e), status=StatusType.ERROR), content=ClientContent(job_status=self.job_status))
         finally:
-            self.chat_context.finish_interaction()
+            self.reset_state()
 
     async def abort_process(self):
         if self.job_status in [JobStatus.IDLE, JobStatus.ABORTED, JobStatus.FAILED]:
@@ -73,6 +82,8 @@ class GroupManager:
         await self.connection_manager.remove_from_queue(self)
         if self.worker_connection:
             await self.worker_connection.abort_job()
+        else:
+            await self.start_process()
     
     async def _event_listener(self, websocket:WebSocket):
         try:

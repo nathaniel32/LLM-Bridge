@@ -39,8 +39,8 @@ class ChatContext(BaseModel):
         
         self.interaction_history.remove(interaction)
         
-        if interaction is self.active_interaction:
-            self.active_interaction = None
+        #if interaction is self.active_interaction:
+        #    self.active_interaction = None
 
         interaction.prompt = ""
         interaction.response = ""

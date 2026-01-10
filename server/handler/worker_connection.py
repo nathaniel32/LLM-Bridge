@@ -17,11 +17,16 @@ class WorkerConnection:
         self.group_manager: Optional[GroupManager] = None
         self.worker_unsuccess_action: Optional[WorkerServerActionType] = None
 
+    def reset_state(self):
+        self.job_event = None
+        self.group_manager = None
+        self.worker_unsuccess_action = None
+
     async def send(self, action=None, content=None):
         await ws_response(websockets=[self.connection], action=action, content=content)
 
     async def abort_job(self):
-        if self.job_event and self.group_manager.abort:
+        if self.job_event:
             await self.send(action=ServerWorkerActionType.ABORT_JOB)
             await self.group_manager.send(message=MessageModel(text="Job abort request sended to Worker"))
 
@@ -33,8 +38,6 @@ class WorkerConnection:
                 await self.group_manager.send(message=MessageModel(text="Sending Job to Worker..."))
                 await self.send(action=ServerWorkerActionType.CREATE_JOB, content=InputJobContent(input_text=group_manager.chat_context.get_chat_message()))
                 await self.job_event.wait()
-
-                print(self.worker_unsuccess_action)
                 if self.worker_unsuccess_action == WorkerServerActionType.ERROR:
                     raise Exception(self.worker_unsuccess_action)
                 if self.worker_unsuccess_action == WorkerServerActionType.ABORTED:
@@ -44,9 +47,7 @@ class WorkerConnection:
             except Exception as e:
                 raise Exception(f"Error in Worker: {e}") from e
             finally:
-                self.job_event = None
-                self.group_manager = None
-                self.worker_unsuccess_action = None
+                self.reset_state()
                 await self.connection_manager.dequeue_job()
         else:
             raise Exception("Worker busy, please try again later!")
