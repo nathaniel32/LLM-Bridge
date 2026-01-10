@@ -48,12 +48,18 @@ class GroupManager:
         await self.send(content=ClientContent(job_status=self.job_status))
 
     async def create_interaction(self, prompt):
-        self.chat_context.create_interaction(prompt)
-        await self.register_job()
-    
+        try:
+            self.chat_context.create_interaction(prompt)
+            await self.register_job()
+        except JobRequestError as e:
+            await self.send(message=MessageModel(text=str(e), status=StatusType.WARNING))
+
     async def edit_interaction(self, prompt, interaction_id):
-        self.chat_context.edit_interaction(interaction_id, prompt)
-        await self.register_job()
+        try:
+            self.chat_context.edit_interaction(interaction_id, prompt)
+            await self.register_job()
+        except JobRequestError as e:
+            await self.send(message=MessageModel(text=str(e), status=StatusType.WARNING))
 
     async def start_job(self):
         try:
@@ -87,22 +93,3 @@ class GroupManager:
     async def delete_interaction(self, interaction_id):
         interaction = self.chat_context.delete_interaction(interaction_id=interaction_id)
         await self.update_active_interaction(interaction=interaction)
-
-    async def event_handler(self, response_model:ResponseModel):
-        try:
-            match response_model.action:
-                case ClientServerActionType.CREATE_INTERACTION:
-                    await self.create_interaction(prompt=response_model.content.input_text)
-                case ClientServerActionType.ABORT_INTERACTION:
-                    await self.abort_interaction()
-                case ClientServerActionType.DELETE_INTERACTION:
-                    await self.delete_interaction(interaction_id=response_model.content.input_id)
-                case ClientServerActionType.EDIT_INTERACTION:
-                    await self.edit_interaction(prompt=response_model.content.input_text, interaction_id=response_model.content.input_id)
-                case _:
-                    await self.send(message=MessageModel(text="Unknown action", status=StatusType.ERROR))
-
-        except JobRequestError as e:
-            await self.send(message=MessageModel(text=str(e), status=StatusType.WARNING))
-        except Exception as e:
-            await self.send(message=MessageModel(text=str(e), status=StatusType.ERROR))
