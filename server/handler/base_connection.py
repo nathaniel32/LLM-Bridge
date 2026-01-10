@@ -15,7 +15,7 @@ class BaseConnection(ABC):
         await ws_response(websockets=[self.connection], action=action, message=message, content=content)
 
     @abstractmethod
-    async def event_handler(event_data):
+    async def event_handler(self, event_data):
         pass
 
     async def _event_listener(self):
