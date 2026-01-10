@@ -21,14 +21,14 @@ class ClientConnection(BaseConnection):
     async def event_handler(self, response_model:ResponseModel):
         match response_model.action:
             case ClientServerActionType.CREATE_GROUP:
-                self.group_manager = await self.connection_manager.add_group_manager()
-                await self.group_manager.add_client(self)
+                group = await self.connection_manager.add_group_manager()
+                await group.add_client(self)
             case ClientServerActionType.DELETE_GROUP:
-                group_id = response_model.content.input_id
-                pass
+                group = self.connection_manager.get_group_by_id(group_id=response_model.content.input_id)
+                await group.delete_group()
             case ClientServerActionType.JOIN_GROUP:
-                self.group_manager = self.connection_manager.get_group_by_id(group_id=response_model.content.input_id)
-                await self.group_manager.add_client(self)
+                group = self.connection_manager.get_group_by_id(group_id=response_model.content.input_id)
+                await group.add_client(self)
             case ClientServerActionType.LEAVE_GROUP:
                 await self.group_manager.remove_client(self)
                 self.group_manager = None

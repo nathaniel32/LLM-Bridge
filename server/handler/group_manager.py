@@ -22,11 +22,19 @@ class GroupManager:
 
     async def add_client(self, client_connection:"ClientConnection"):
         self.client_connections.append(client_connection)
+        client_connection.group_manager = self
         await client_connection.send(message=MessageModel(text=f"Joined to {self.group_infos.id}"), content=ClientContent(joined_group_id=self.group_infos.id))
     
     async def remove_client(self, client_connection:"ClientConnection"):
         self.client_connections.remove(client_connection)
+        client_connection.group_manager = None
         await client_connection.send(message=MessageModel(text=f"Leave from {self.group_infos.id}"), content=ClientContent(joined_group_id=""))
+
+    async def delete_group(self):
+        await self.connection_manager.remove_group_manager(self)
+        await self.abort_interaction()
+        for client in self.client_connections:
+            await self.remove_client(client)
 
     async def send(self, message=None, content=None, action=None, client_connections=None):
         if client_connections is None:
@@ -38,11 +46,12 @@ class GroupManager:
     async def update_interaction(self, interaction=None, status:Optional[InteractionStatus]=None):
         if interaction is None:
             interaction = self.chat_context.active_interaction
-
-        if status:
-            interaction.status = status
         
-        await self.send(content=ClientContent(interaction=interaction))
+        if interaction is not None:
+            if status:
+                interaction.status = status
+            
+            await self.send(content=ClientContent(interaction=interaction))
 
     async def register_job(self):
         await self.update_interaction(status=InteractionStatus.QUEUED)

@@ -50,7 +50,7 @@ class ConnectionManager:
                 await group_manager.send(message=MessageModel(text="Removed from waiting list", status=StatusType.WARNING))
                 await self._notify_queue_position(removed_group=group_manager)
             else:
-                await group_manager.send(message=MessageModel(text="Client not found in waiting list", status=StatusType.WARNING))
+                await group_manager.send(message=MessageModel(text="Group not found in waiting list", status=StatusType.WARNING))
 
     async def dequeue_job(self):
         async with self._dispatch_lock:
