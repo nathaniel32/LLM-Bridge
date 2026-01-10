@@ -130,7 +130,25 @@
                     <i class="fas fa-robot text-blue-600 text-xl"></i>
                     <h1 class="text-lg font-semibold text-gray-800">LLM Chat</h1>
                 </div>
-                <div class="flex items-center gap-2">
+                <div class="flex items-center gap-3">
+                    <!-- WebSocket Status -->
+                    <div class="flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium"
+                         :class="{
+                             'bg-green-100 text-green-700': wsConnected,
+                             'bg-yellow-100 text-yellow-700': wsConnecting,
+                             'bg-red-100 text-red-700': !wsConnected && !wsConnecting
+                         }">
+                        <span class="w-2 h-2 rounded-full"
+                              :class="{
+                                  'bg-green-500 animate-pulse-custom': wsConnected,
+                                  'bg-yellow-500 animate-pulse-custom': wsConnecting,
+                                  'bg-red-500': !wsConnected && !wsConnecting
+                              }"></span>
+                        <span class="hidden sm:inline">
+                            {{ wsConnected ? 'Connected' : wsConnecting ? 'Connecting...' : 'Disconnected' }}
+                        </span>
+                    </div>
+                    
                     <button 
                         @click="toggleSidebar"
                         class="flex items-center gap-2 px-3 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
@@ -532,7 +550,9 @@
                 groupsInfos: [],
                 joinedGroupId: null,
                 heartbeatTimeout: null,
-                sidebarOpen: true
+                sidebarOpen: true,
+                wsConnected: false,
+                wsConnecting: false
             },
             computed: {
                 hasActiveConnection() {
@@ -574,9 +594,15 @@
                 // WebSocket Initialization
                 // ============================
                 initWebSocket() {
+                    this.wsConnecting = true;
+                    this.wsConnected = false;
+                    
                     this.ws = new WebSocket("ws://localhost:9050/connection/client");
                     
                     this.ws.addEventListener("open", () => {
+                        this.wsConnected = true;
+                        this.wsConnecting = false;
+                        console.log('WebSocket connected');
                         this.handleAutoJoin();
                     });
 
@@ -694,6 +720,9 @@
                 // ============================
                 handleConnectionIssue(eventType) {
                     console.error(`WebSocket connection: ${eventType}`);
+                    
+                    this.wsConnected = false;
+                    this.wsConnecting = false;
 
                     if (this.heartbeatTimeout) {
                         clearTimeout(this.heartbeatTimeout);
