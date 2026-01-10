@@ -192,7 +192,7 @@
                     }));
                 },
                 requestDelete(item) {
-                    if (confirm(`Delete Chat: ${item.id}`)){
+                    if (confirm(`Delete Interaction: ${item.id}`)){
                         this.ws.send(JSON.stringify({
                             action: "delete_job",
                             content: {
