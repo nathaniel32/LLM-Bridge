@@ -4,6 +4,7 @@ from pydantic import BaseModel, Field
 from uuid import uuid4
 
 class JobStatus(str, Enum):
+    CREATED = "created"
     IN_PROGRESS = "in_progress"
     FAILED = "failed"
     ABORTED = "aborted"
@@ -34,6 +35,7 @@ class ResponseStreamContent(BaseModel):
     response: str
 
 class InputJobContent(BaseModel):
+    status: JobStatus = JobStatus.CREATED
     input_id: Optional[str] = None
     input_text: Optional[str] = None
 
