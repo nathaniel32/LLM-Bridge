@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login Demo</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f5f5f5;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+
+        input, select, textarea {
+            font-size: 16px;
+        }
+
+        .login-container {
+            background-color: #fff;
+            padding: 2rem;
+            border-radius: 8px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+            width: 300px;
+        }
+
+        h2 {
+            text-align: center;
+            margin-bottom: 1rem;
+        }
+
+        input {
+            width: 100%;
+            padding: 0.5rem;
+            margin-bottom: 1rem;
+            border-radius: 4px;
+            border: 1px solid #ccc;
+            box-sizing: border-box;
+        }
+
+        .password-container {
+            position: relative;
+            margin-bottom: 1rem;
+        }
+
+        .password-container input {
+            margin-bottom: 0;
+            padding-right: 2.5rem;
+        }
+
+        .toggle-password {
+            position: absolute;
+            right: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            cursor: pointer;
+            color: #666;
+            user-select: none;
+        }
+
+        .toggle-password:hover {
+            color: #007bff;
+        }
+
+        button {
+            width: 100%;
+            padding: 0.5rem;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background-color: #0056b3;
+        }
+
+        .message {
+            margin-top: 1rem;
+            text-align: center;
+            color: red;
+        }
+    </style>
+</head>
+<body>
+
+<div class="login-container">
+    <h2>Login</h2>
+    <div>
+        <input type="text" id="username" placeholder="Username">
+        <div class="password-container">
+            <input type="password" id="password" placeholder="Password">
+            <span class="toggle-password" id="togglePassword">
+                <i class="far fa-eye"></i>
+            </span>
+        </div>
+        <button id="loginBtn">Login</button>
+    </div>
+    <div class="message" id="message"></div>
+</div>
+
+<script>
+    async function loginUser(username, password) {
+        try {
+            const response = await fetch(
+                '/login',
+                {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username, password }),
+                }
+            );
+
+            const data = await response.json();
+            console.log("API LOGIN RESPONSE DATA:", data);
+
+            if (!response.ok) {
+                throw new Error(data.detail || 'Login failed');
+            }
+
+            return data;
+        } catch (error) {
+            throw error;
+        }
+    }
+
+    const loginBtn = document.getElementById('loginBtn');
+    const messageDiv = document.getElementById('message');
+    const usernameInput = document.getElementById('username');
+    const passwordInput = document.getElementById('password');
+    const togglePassword = document.getElementById('togglePassword');
+
+    // Toggle password visibility
+    togglePassword.addEventListener('click', () => {
+        const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+        passwordInput.setAttribute('type', type);
+        
+        const icon = togglePassword.querySelector('i');
+        if (type === 'password') {
+            icon.classList.remove('fa-eye-slash');
+            icon.classList.add('fa-eye');
+        } else {
+            icon.classList.remove('fa-eye');
+            icon.classList.add('fa-eye-slash');
+        }
+    });
+
+    async function handleLogin(e) {
+        if (e) e.preventDefault();
+        
+        const username = usernameInput.value;
+        const password = passwordInput.value;
+
+        messageDiv.textContent = '';
+
+        try {
+            messageDiv.style.color = 'gray';
+            messageDiv.textContent = 'Loading...';
+            const result = await loginUser(username, password);
+            messageDiv.style.color = 'green';
+            messageDiv.textContent = 'Login successful!';
+            console.log('Login result:', result);
+            setTimeout(() => {
+                location.reload();
+            }, 500);
+        } catch (err) {
+            messageDiv.style.color = 'red';
+            messageDiv.textContent = err.message;
+            console.error(err);
+        }
+    }
+
+    loginBtn.addEventListener('click', handleLogin);
+    
+    // Handle Enter key press on both inputs
+    usernameInput.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') {
+            handleLogin(e);
+        }
+    });
+    
+    passwordInput.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') {
+            handleLogin(e);
+        }
+    });
+</script>
+
+</body>
+</html>
