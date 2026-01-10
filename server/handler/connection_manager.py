@@ -3,7 +3,7 @@ from server.handler.worker_connection import WorkerConnection
 from typing import List, Optional
 import asyncio
 from server.models import JobRequestError
-from common.models import ClientContent, MessageModel
+from common.models import ClientContent, MessageModel, StatusType
 
 class ConnectionManager:
     def __init__(self):
@@ -30,6 +30,15 @@ class ConnectionManager:
 
         if removed_group is not None and removed_group not in self.waiting_groups:
             await removed_group.send(content=ClientContent(queue_position=0))
+
+    async def remove_from_queue(self, group_manager: GroupManager):
+        async with self._dispatch_lock:
+            if group_manager in self.waiting_groups:
+                self.waiting_groups.remove(group_manager)
+                await group_manager.send(message=MessageModel(text="Removed from waiting list", status=StatusType.WARNING))
+                await self._notify_queue_position(removed_group=group_manager)
+            else:
+                await group_manager.send(message=MessageModel(text="Client not found in waiting list", status=StatusType.WARNING))
 
     async def dequeue_job(self):
         async with self._dispatch_lock:

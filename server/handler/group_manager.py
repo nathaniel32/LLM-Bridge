@@ -66,6 +66,7 @@ class GroupManager:
         
         self.abort = True
         await self.send(message=MessageModel(text="trying to abort request...", status=StatusType.WARNING))
+        await self.connection_manager.remove_from_queue(self)
         if self.worker_connection:
             await self.worker_connection.abort_job()
     
