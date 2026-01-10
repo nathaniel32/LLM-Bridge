@@ -33,13 +33,13 @@ class GroupManager:
         for client_connection in client_connections:
             await client_connection.send(action=action, message=message, content=content)
 
-    async def update_active_interaction(self, interaction=None):
+    async def update_interaction(self, interaction=None):
         if interaction is None:
             interaction = self.chat_context.active_interaction
         await self.send(content=ClientContent(interaction=interaction))
 
     async def register_job(self):
-        await self.update_active_interaction()
+        await self.update_interaction()
         await self.connection_manager.enqueue_job(group_manager=self)
         await self.send(message=MessageModel(text="register job"))
 
@@ -81,4 +81,4 @@ class GroupManager:
 
     async def delete_interaction(self, interaction_id):
         interaction = self.chat_context.delete_interaction(interaction_id=interaction_id)
-        await self.update_active_interaction(interaction=interaction)
+        await self.update_interaction(interaction=interaction)
