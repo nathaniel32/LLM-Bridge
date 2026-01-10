@@ -2,8 +2,7 @@ from typing import TYPE_CHECKING, Optional
 from fastapi import WebSocket
 from server.handler.group_manager import GroupManager
 from server.handler.base_connection import BaseConnection
-from common.models import ResponseModel, ClientServerActionType, StatusType, MessageModel
-import json
+from common.models import ResponseModel, ClientServerActionType
 
 if TYPE_CHECKING:
     from server.handler.connection_manager import ConnectionManager

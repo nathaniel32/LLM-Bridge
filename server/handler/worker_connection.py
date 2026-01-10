@@ -1,10 +1,7 @@
 from typing import TYPE_CHECKING, Optional
 from fastapi import WebSocket
 from common.models import WorkerServerActionType, ServerWorkerActionType, InputJobContent, ResponseModel, MessageModel, ResponseStreamContent, AbortException
-import logging
-import json
 from server.handler.group_manager import GroupManager
-from server.utils import ws_response
 import asyncio
 from server.handler.base_connection import BaseConnection
 if TYPE_CHECKING:
