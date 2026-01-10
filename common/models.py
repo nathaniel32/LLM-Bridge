@@ -3,7 +3,11 @@ from enum import Enum
 from pydantic import BaseModel, Field
 from uuid import uuid4
 
-class JobStatus(str, Enum):
+class GroupStatus(str, Enum):
+    ACTIVE = "active"
+    DELETED = "deleted"
+
+class InteractionStatus(str, Enum):
     CREATED = "created"
     IN_PROGRESS = "in_progress"
     FAILED = "failed"
@@ -23,7 +27,7 @@ class AbortException(Exception):
 
 class Interaction(BaseModel):
     id: str = Field(default_factory=lambda: uuid4().hex)
-    status: JobStatus = JobStatus.CREATED
+    status: InteractionStatus = InteractionStatus.CREATED
     prompt: str
     response: str = ""
 
@@ -32,7 +36,7 @@ class Interaction(BaseModel):
         return self.response
 
 class GroupInfos(BaseModel):
-    status: JobStatus = JobStatus.CREATED
+    status: GroupStatus = GroupStatus.ACTIVE
     id: str
     name: str
 
