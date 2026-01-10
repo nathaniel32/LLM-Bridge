@@ -1,4 +1,3 @@
-import json
 from typing import TYPE_CHECKING, List, Optional
 from common.models import StatusType, ClientContent, MessageModel, AbortException, GroupInfos
 from server.models import JobRequestError, ChatContext
