@@ -1,21 +1,21 @@
 import json
-from fastapi import WebSocket, WebSocketDisconnect
+from fastapi import WebSocket
 from typing import TYPE_CHECKING, List, Optional
 from common.models import ClientServerActionType, StatusType, JobStatus, ClientContent, MessageModel, ResponseModel, AbortException, GroupInfos
 from server.utils import ws_response
-import logging
 from server.models import JobRequestError, ChatContext
 from uuid import uuid4
 
 if TYPE_CHECKING:
     from server.handler.connection_manager import ConnectionManager
     from server.handler.worker_connection import WorkerConnection
+    from server.handler.client_connection import ClientConnection
 
 class GroupManager:
     def __init__(self, connection_manager:"ConnectionManager"):
         self.group_infos = GroupInfos(id=uuid4().hex, name="unnamed")
         self.connection_manager = connection_manager
-        self.client_connections: List[WebSocket] = []
+        self.client_connections: List[ClientConnection] = []
         self.worker_connection: Optional["WorkerConnection"] = None
         self.chat_context = ChatContext()
         self.job_status = JobStatus.IDLE
@@ -25,11 +25,18 @@ class GroupManager:
         self.worker_connection = None
         self.job_status = JobStatus.IDLE
 
-    async def send(self, message=None, content=None, action=None, connections=None):
-        if connections is None:
-            connections = self.client_connections
+    async def add_client(self, client_connection):
+        self.client_connections.append(client_connection)
+    
+    async def remove_client(self, client_connection):
+        self.client_connections.remove(client_connection)
 
-        await ws_response(websockets=connections, action=action, message=message, content=content)
+    async def send(self, message=None, content=None, action=None, client_connections=None):
+        if client_connections is None:
+            client_connections = self.client_connections
+
+        for client_connection in client_connections:
+            await client_connection.send(action=action, message=message, content=content)
 
     async def update_active_interaction(self, interaction=None):
         if interaction is None:
@@ -82,45 +89,24 @@ class GroupManager:
     async def delete_interaction(self, interaction_id):
         interaction = self.chat_context.delete_interaction(interaction_id=interaction_id)
         await self.update_active_interaction(interaction=interaction)
-    
-    async def _event_listener(self, websocket:WebSocket):
+
+    async def event_handler(self, event_data):
         try:
-            while True:
-                event_data = await websocket.receive()
+            response_model = ResponseModel(**json.loads(event_data["text"]))
+            
+            match response_model.action:
+                case ClientServerActionType.CREATE_INTERACTION:
+                    await self.create_interaction(prompt=response_model.content.input_text)
+                case ClientServerActionType.ABORT_INTERACTION:
+                    await self.abort_interaction()
+                case ClientServerActionType.DELETE_INTERACTION:
+                    await self.delete_interaction(interaction_id=response_model.content.input_id)
+                case ClientServerActionType.EDIT_INTERACTION:
+                    await self.edit_interaction(prompt=response_model.content.input_text, interaction_id=response_model.content.input_id)
+                case _:
+                    await self.send(message=MessageModel(text="Unknown action", status=StatusType.ERROR))
 
-                if event_data.get("text"):
-                    try:
-                        response_model = ResponseModel(**json.loads(event_data["text"]))
-                        
-                        match response_model.action:
-                            case ClientServerActionType.CREATE_INTERACTION:
-                                await self.create_interaction(prompt=response_model.content.input_text)
-                            case ClientServerActionType.ABORT_INTERACTION:
-                                await self.abort_interaction()
-                            case ClientServerActionType.DELETE_INTERACTION:
-                                await self.delete_interaction(interaction_id=response_model.content.input_id)
-                            case ClientServerActionType.EDIT_INTERACTION:
-                                await self.edit_interaction(prompt=response_model.content.input_text, interaction_id=response_model.content.input_id)
-                            case _:
-                                await self.send(message=MessageModel(text="Unknown action", status=StatusType.ERROR))
-
-                    except JobRequestError as e:
-                        await self.send(message=MessageModel(text=str(e), status=StatusType.WARNING))
-                    except Exception as e:
-                        await self.send(message=MessageModel(text=str(e), status=StatusType.ERROR))
-
-        except WebSocketDisconnect:
-            logging.info("WebSocket disconnected")
+        except JobRequestError as e:
+            await self.send(message=MessageModel(text=str(e), status=StatusType.WARNING))
         except Exception as e:
-            logging.error("Unexpected error in websocket listener")
-        finally:
-            logging.info("END!")
-
-            if websocket in self.client_connections:
-                self.client_connections.remove(websocket)
-                print("Active Connections: ", len(self.client_connections))
-
-    async def bind(self, websocket:WebSocket):
-        self.client_connections.append(websocket)
-        print("client online: ", len(self.client_connections))
-        await self._event_listener(websocket)
+            await self.send(message=MessageModel(text=str(e), status=StatusType.ERROR))

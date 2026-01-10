@@ -1,5 +1,6 @@
 from server.handler.group_manager import GroupManager
 from server.handler.worker_connection import WorkerConnection
+from server.handler.client_connection import ClientConnection
 from typing import List, Optional
 import asyncio
 from server.models import JobRequestError
@@ -8,23 +9,25 @@ from common.models import ClientContent, MessageModel, StatusType
 class ConnectionManager:
     def __init__(self):
         self.group_managers: List[GroupManager] = []
+        self.client_connections: List[ClientConnection] = []
         self.worker_connections: List[WorkerConnection] = []
         self.waiting_groups: List[GroupManager] = []
         self._group_lock = asyncio.Lock()
         self._worker_lock = asyncio.Lock()
+        self._client_lock = asyncio.Lock()
         self._dispatch_lock = asyncio.Lock()
 
     def _get_groups_infos(self):
         return [gm.group_infos for gm in self.group_managers]
 
-    # send to all groups
+    # send to all clients
     async def broadcast(self, message=None, content=None, action=None):
         async with self._group_lock:
-            groups = self.group_managers.copy()
+            clients = self.client_connections.copy()
         
         # Lockless broadcast (avoids deadlock)
-        for group in groups:
-            await group.send(message=message, content=content, action=action)
+        for client in clients:
+            await client.send(message=message, content=content, action=action)
 
     async def _notify_queue_position(self, removed_group:Optional[GroupManager]=None):
         for position, client_session in enumerate(self.waiting_groups):
@@ -98,3 +101,11 @@ class ConnectionManager:
                 print("Worker connection removed: ", len(self.worker_connections))
         
         await self.broadcast(content=ClientContent(worker_num=len(self.worker_connections)))
+
+    async def add_client_connection(self, websocket) -> ClientConnection:
+        async with self._client_lock:
+            connection = ClientConnection(self, websocket)
+            self.client_connections.append(connection)
+            print("Active Client: ", len(self.client_connections))
+        
+        return connection
