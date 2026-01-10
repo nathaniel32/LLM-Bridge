@@ -1,6 +1,6 @@
 from typing import TYPE_CHECKING, Optional
 from fastapi import WebSocket
-from common.models import WorkerServerActionType, ServerWorkerActionType, InputJobContent, ResponseModel, MessageModel, ResponseStreamContent, AbortException, StatusType
+from common.models import WorkerServerActionType, ServerWorkerActionType, InputContent, ResponseModel, MessageModel, ResponseStreamContent, AbortException, StatusType
 from server.handler.group_manager import GroupManager
 import asyncio
 import logging
@@ -32,7 +32,7 @@ class WorkerConnection(BaseConnection):
                 self.job_event = asyncio.Event()
                 self.group_manager = group_manager
                 await self.group_manager.send(message=MessageModel(text="Sending Job to Worker..."))
-                await self.send(action=ServerWorkerActionType.CREATE_INTERACTION, content=InputJobContent(input_text=group_manager.chat_context.get_chat_message()))
+                await self.send(action=ServerWorkerActionType.CREATE_INTERACTION, content=InputContent(input_text=group_manager.chat_context.get_chat_message()))
                 await self.job_event.wait()
                 if self.worker_unsuccess_action == WorkerServerActionType.ERROR:
                     raise Exception(self.worker_unsuccess_action)

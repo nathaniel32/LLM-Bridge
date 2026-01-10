@@ -24,8 +24,10 @@ class ClientConnection(BaseConnection):
                 self.group_manager = await self.connection_manager.add_group_manager()
                 await self.group_manager.add_client(self)
             case ClientServerActionType.DELETE_GROUP:
+                group_id = response_model.content.input_id
                 pass
             case ClientServerActionType.JOIN_GROUP:
+                group_id = response_model.content.input_id
                 pass
             case ClientServerActionType.LEAVE_GROUP:
                 pass

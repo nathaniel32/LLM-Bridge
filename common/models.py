@@ -47,7 +47,7 @@ class GroupInfos(BaseModel):
 class ResponseStreamContent(BaseModel):
     response: str
 
-class InputJobContent(BaseModel):
+class InputContent(BaseModel):
     input_id: Optional[str] = None
     input_text: Optional[str] = None
 
@@ -99,4 +99,4 @@ class MessageModel(BaseModel):
 class ResponseModel(BaseModel):
     action: Optional[Union[ServerClientActionType, ClientServerActionType, ServerWorkerActionType, WorkerServerActionType]] = None
     message: Optional[MessageModel] = None
-    content: Optional[Union[ClientContent, InputJobContent, ResponseStreamContent]] = None
+    content: Optional[Union[ClientContent, InputContent, ResponseStreamContent]] = None
