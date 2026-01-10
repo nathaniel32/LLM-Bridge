@@ -46,14 +46,15 @@ class Worker:
         payload = {
             "model": MODEL,
             "messages": messages,
-            "stream": True
+            "stream": True,
+            "keep_alive": -1
         }
         
         await self.send(message=MessageModel(text=MODEL))
         
         try:
             print("\n\n==== INPUT:", messages)
-            async with httpx.AsyncClient() as client:
+            async with httpx.AsyncClient(timeout=httpx.Timeout(connect=10.0, read=None, write=10.0, pool=10.0)) as client:
                 async with client.stream("POST", OLLAMA_URL, json=payload) as response:
                     print("====AI:")
 
