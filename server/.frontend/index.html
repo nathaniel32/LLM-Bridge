@@ -5,324 +5,519 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>WS LLM Chat</title>
     <script src="https://cdn.jsdelivr.net/npm/vue@2/dist/vue.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        window.MathJax = {
+            tex: {
+                inlineMath: [['\\(', '\\)'], ['$', '$']],
+                displayMath: [['\\[', '\\]'], ['$$', '$$']],
+                packages: {'[+]': ['ams']},
+            },
+            options: {
+                skipHtmlTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code'],
+                ignoreHtmlClass: 'no-mathjax',
+            },
+            startup: {
+                pageReady: () => {
+                    return MathJax.startup.defaultPageReady().then(() => {
+                        console.log('MathJax loaded');
+                    });
+                }
+            }
+        };
+    </script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    
     <style>
-        body { font-family: sans-serif; margin: 0; padding: 0; background: #f8f9fa }
-        .chat { max-width: 920px; margin: auto; padding: 20px }
+        [v-cloak] { display: none; }
         
-        /* Status Badge Styles for Interaction */
-        .badge {
-            display: inline-block;
-            padding: 4px 10px;
-            border-radius: 12px;
-            font-size: 11px;
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+        
+        /* Markdown Styles */
+        .markdown-content {
+            line-height: 1.7;
+        }
+        .markdown-content h1 { font-size: 1.875rem; font-weight: 700; margin-top: 1.5rem; margin-bottom: 1rem; }
+        .markdown-content h2 { font-size: 1.5rem; font-weight: 700; margin-top: 1.25rem; margin-bottom: 0.875rem; }
+        .markdown-content h3 { font-size: 1.25rem; font-weight: 600; margin-top: 1rem; margin-bottom: 0.75rem; }
+        .markdown-content p { margin-bottom: 1rem; }
+        .markdown-content ul, .markdown-content ol { margin-left: 1.5rem; margin-bottom: 1rem; }
+        .markdown-content li { margin-bottom: 0.5rem; }
+        .markdown-content code {
+            background: #f1f5f9;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875em;
+            font-family: 'Courier New', monospace;
+        }
+        .markdown-content pre {
+            background: #1e293b;
+            color: #e2e8f0;
+            padding: 1rem;
+            border-radius: 0.5rem;
+            overflow-x: auto;
+            margin-bottom: 1rem;
+        }
+        .markdown-content pre code {
+            background: transparent;
+            padding: 0;
+            color: inherit;
+        }
+        .markdown-content blockquote {
+            border-left: 4px solid #cbd5e1;
+            padding-left: 1rem;
+            color: #64748b;
+            margin-bottom: 1rem;
+        }
+        .markdown-content table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 1rem;
+        }
+        .markdown-content th, .markdown-content td {
+            border: 1px solid #e2e8f0;
+            padding: 0.5rem;
+            text-align: left;
+        }
+        .markdown-content th {
+            background: #f8fafc;
             font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            margin-left: 8px;
-        }
-        .badge-created { background: #e3f2fd; color: #1976d2 }
-        .badge-in_progress { background: #fff3e0; color: #f57c00 }
-        .badge-failed { background: #ffebee; color: #c62828 }
-        .badge-aborted { background: #fce4ec; color: #c2185b }
-        .badge-deleted { background: #f5f5f5; color: #757575 }
-        
-        /* Status Badge Styles for Group */
-        .badge-active { background: #e8f5e9; color: #2e7d32 }
-        
-        /* Interaction Styles */
-        .item {
-            background: #fff;
-            margin-bottom: 16px;
-            padding: 16px;
-            border-radius: 8px;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-        }
-        .prompt {
-            font-weight: bold;
-            font-size: 15px;
-            margin-bottom: 8px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-        }
-        .prompt-text { flex: 1 }
-        .actions {
-            display: flex;
-            gap: 8px;
-        }
-        .edit {
-            font-size: 12px;
-            cursor: pointer;
-            padding: 4px 8px;
-            background: #f0f0f0;
-            border-radius: 4px;
-            font-weight: normal;
-        }
-        .edit:hover { background: #e0e0e0 }
-        .response {
-            white-space: pre-wrap;
-            margin-top: 8px;
-            color: #333;
-            line-height: 1.6;
-            padding-left: 12px;
-            border-left: 3px solid #e0e0e0;
         }
         
-        /* Messages (notifications) */
-        .messages {
-            position: fixed;
-            top: 16px;
-            right: 16px;
-            width: 320px;
-            z-index: 1000;
+        /* Pulse Animation */
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
         }
-        .msg {
-            padding: 12px 16px;
-            margin-bottom: 8px;
-            border-radius: 6px;
-            color: #fff;
-            font-size: 14px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.15);
-        }
-        .info { background: #2196f3 }
-        .success { background: #4caf50 }
-        .warning { background: #ff9800; color: #000 }
-        .error { background: #f44336 }
-        
-        /* Status Bar */
-        .status-bar {
-            background: #fff;
-            padding: 16px;
-            margin-bottom: 20px;
-            border-radius: 8px;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-        }
-        .status-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-            gap: 12px;
-            margin-bottom: 16px;
-        }
-        .status-item {
-            padding: 8px 12px;
-            background: #f8f9fa;
-            border-radius: 6px;
-            font-size: 13px;
-        }
-        .status-item strong {
-            display: block;
-            color: #666;
-            font-size: 11px;
-            margin-bottom: 4px;
-        }
-        .status-value {
-            font-size: 18px;
-            font-weight: 600;
-            color: #333;
+        .animate-pulse-custom {
+            animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
         }
         
-        /* Groups Section */
-        .groups-section {
-            margin-top: 16px;
-            padding-top: 16px;
-            border-top: 1px solid #e0e0e0;
+        /* Slide In Animation */
+        @keyframes slideIn {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
         }
-        .groups-header {
-            font-weight: 600;
-            margin-bottom: 12px;
-            font-size: 14px;
-            color: #333;
-        }
-        .group-item {
-            background: #f8f9fa;
-            padding: 10px 14px;
-            margin: 6px 0;
-            border-radius: 6px;
-            border: 1px solid #e0e0e0;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 12px;
-        }
-        .group-info { flex: 1 }
-        .group-name {
-            font-weight: 600;
-            font-size: 14px;
-            margin-bottom: 4px;
-        }
-        .group-id {
-            font-family: monospace;
-            color: #666;
-            font-size: 11px;
+        .animate-slide-in {
+            animation: slideIn 0.3s ease-out;
         }
         
-        /* Button Group for Groups */
-        .group-button-group {
-            display: flex;
-            gap: 4px;
+        /* Fade In Animation */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
         }
-        .group-btn {
-            padding: 5px 10px;
-            border: none;
-            border-radius: 4px;
-            font-size: 11px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-        .group-btn:hover { opacity: 0.8; transform: scale(1.05) }
-        .btn-join { background: #2196f3; color: #fff }
-        .btn-delete-group { background: #f44336; color: #fff }
-        
-        /* Input Section */
-        .input-section {
-            background: #fff;
-            padding: 16px;
-            border-radius: 8px;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-            margin-bottom: 20px;
-            display: flex;
-            gap: 8px;
-        }
-        input[type="text"] {
-            flex: 1;
-            padding: 10px 14px;
-            border: 1px solid #ddd;
-            border-radius: 6px;
-            font-size: 14px;
-        }
-        input[type="text"]:focus {
-            outline: none;
-            border-color: #2196f3;
-        }
-        button {
-            padding: 10px 20px;
-            border: none;
-            border-radius: 6px;
-            font-size: 14px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-        button:hover { opacity: 0.9; transform: translateY(-1px) }
-        .btn-send { background: #2196f3; color: #fff }
-        .btn-abort { background: #f44336; color: #fff }
-        .btn-leave { background: #ff9800; color: #fff }
-        .btn-create-group { background: #4caf50; color: #fff; width: 100%; margin-top: 12px }
-        
-        h2 {
-            margin-top: 0;
-            margin-bottom: 20px;
-            color: #333;
+        .animate-fade-in {
+            animation: fadeIn 0.3s ease-out;
         }
     </style>
 </head>
-<body>
-    <div id="app">
-        <div class="messages">
-            <div v-for="m in messages" :key="m.id" class="msg" :class="m.status">
-                {{ m.text }}
-            </div>
-        </div>
+<body class="bg-gray-50">
+    <div id="app" v-cloak class="h-screen flex flex-col">
+        <!-- Notifications -->
+        <notification-messages :messages="messages"></notification-messages>
 
-        <div class="chat">
-            <h2>🤖 LLM Chat</h2>
-
-            <!-- Status Bar -->
-            <div class="status-bar">
-                <div class="status-grid">
-                    <div class="status-item" v-if="clientNum !== null">
-                        <strong>Client #</strong>
-                        <div class="status-value">{{ clientNum }}</div>
-                    </div>
-                    <div class="status-item" v-if="queuePosition !== null">
-                        <strong>Queue Position</strong>
-                        <div class="status-value">{{ queuePosition }}</div>
-                    </div>
-                    <div class="status-item" v-if="queueLength !== null">
-                        <strong>Queue Length</strong>
-                        <div class="status-value">{{ queueLength }}</div>
-                    </div>
-                    <div class="status-item" v-if="workerNum !== null">
-                        <strong>Worker #</strong>
-                        <div class="status-value">{{ workerNum }}</div>
-                    </div>
-                    <div class="status-item" v-if="groupNum !== null">
-                        <strong>Group #</strong>
-                        <div class="status-value">{{ groupNum }}</div>
-                    </div>
-                    <div class="status-item" v-if="groupNum !== null">
-                        <strong>Joined Group ID</strong>
-                        <div class="status-value">{{ joinedGroupId }}</div>
-                    </div>
+        <!-- Header -->
+        <header class="bg-white border-b border-gray-200 shadow-sm">
+            <div class="flex items-center justify-between px-4 py-3">
+                <div class="flex items-center gap-3">
+                    <i class="fas fa-robot text-blue-600 text-xl"></i>
+                    <h1 class="text-lg font-semibold text-gray-800">LLM Chat</h1>
                 </div>
-
-                <!-- Groups Info Section -->
-                <div v-if="groupsInfos && groupsInfos.length > 0" class="groups-section">
-                    <div 
-                        v-for="group in groupsInfos" 
-                        :key="group.id" 
-                        class="group-item" 
-                        :style="joinedGroupId === group.id ? 'background-color: #e3f2fd' : ''"
+                <div class="flex items-center gap-2">
+                    <button 
+                        @click="toggleSidebar"
+                        class="flex items-center gap-2 px-3 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
                     >
-                        <div class="group-info">
-                            <div class="group-name">{{ group.name }}</div>
-                            <div class="group-id">ID: {{ group.id }}</div>
-                        </div>
-                        <span class="badge" :class="'badge-' + group.status">
-                            {{ group.status }}
+                        <i :class="sidebarOpen ? 'fas fa-chevron-left' : 'fas fa-bars'"></i>
+                        <span class="hidden sm:inline">{{ sidebarOpen ? 'Hide' : 'Groups' }}</span>
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <!-- Main Container -->
+        <div class="flex flex-1 overflow-hidden">
+            <!-- Sidebar -->
+            <aside 
+                v-show="sidebarOpen"
+                class="w-80 bg-white border-r border-gray-200 flex flex-col transition-all duration-300"
+            >
+                <!-- Sidebar Header -->
+                <div class="p-4 border-b border-gray-200">
+                    <div class="flex items-center justify-between mb-3">
+                        <h2 class="text-sm font-semibold text-gray-700 uppercase tracking-wide">
+                            <i class="fas fa-users mr-2"></i>Groups
+                        </h2>
+                        <span class="text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded-full font-medium">
+                            {{ groupsInfos.length }}
                         </span>
-                        <div class="group-button-group">
-                            <button class="group-btn btn-join" @click="joinGroup(group.id)">
-                                Join
-                            </button>
-                            <button class="group-btn btn-delete-group" @click="deleteGroup(group.id)">
-                                Delete
-                            </button>
-                        </div>
                     </div>
+                    <button 
+                        @click="createGroup"
+                        class="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-lg hover:from-blue-700 hover:to-blue-800 transition-all shadow-sm hover:shadow-md"
+                    >
+                        <i class="fas fa-plus"></i>
+                        <span class="font-medium">Create New Group</span>
+                    </button>
                 </div>
                 
-                <button class="btn-create-group" @click="createGroup">
-                    ➕ Create New Group
-                </button>
-            </div>
-
-            <!-- Input Section -->
-            <div class="input-section">
-                <input 
-                    type="text" 
-                    v-model="messageInput" 
-                    @keyup.enter="sendMessage"
-                    placeholder="Type your message here..."
-                >
-                <button class="btn-send" @click="sendMessage">Send</button>
-                <button class="btn-abort" @click="abortJob">Abort</button>
-                <button class="btn-leave" @click="leaveGroup">Leave Group</button>
-            </div>
-
-            <!-- Interactions -->
-            <div v-for="item in interactions" :key="item.id" class="item">
-                <div class="prompt">
-                    <span class="prompt-text">
-                        {{ item.prompt }}
-                        <span class="badge" :class="'badge-' + item.status">
-                            {{ item.status }}
-                        </span>
-                    </span>
-                    <div class="actions">
-                        <span class="edit" @click="requestEdit(item)">✏️ Edit</span>
-                        <span class="edit" @click="requestDelete(item)">🗑️ Delete</span>
+                <!-- Groups List -->
+                <div class="flex-1 overflow-y-auto p-3">
+                    <groups-list
+                        v-if="groupsInfos && groupsInfos.length > 0"
+                        :groups="groupsInfos"
+                        :joined-group-id="joinedGroupId"
+                        @join="joinGroup"
+                        @delete="deleteGroup"
+                    ></groups-list>
+                    
+                    <div v-else class="text-center py-12">
+                        <i class="fas fa-inbox text-4xl text-gray-300 mb-3"></i>
+                        <p class="text-sm text-gray-500">No groups yet</p>
                     </div>
                 </div>
-                <div class="response" v-if="item.response">
-                    {{ item.response }}
+            </aside>
+
+            <!-- Chat Area -->
+            <main class="flex-1 flex flex-col bg-gray-50">
+                <!-- Status Panel -->
+                <div 
+                    v-if="hasActiveConnection"
+                    class="bg-white border-b border-gray-200 px-4 py-2"
+                >
+                    <div class="flex items-center gap-4 text-xs text-gray-600 flex-wrap">
+                        <div v-if="joinedGroupId" class="flex items-center gap-2">
+                            <span class="w-2 h-2 bg-green-500 rounded-full animate-pulse-custom"></span>
+                            <span>Connected: <strong class="text-gray-900">{{ joinedGroupId }}</strong></span>
+                        </div>
+                        <div v-if="queuePosition !== null" class="flex items-center gap-2">
+                            <i class="fas fa-clock text-gray-400"></i>
+                            <span>Queue: <strong class="text-gray-900">{{ queuePosition }}/{{ queueLength }}</strong></span>
+                        </div>
+                        <div v-if="workerNum !== null" class="flex items-center gap-2">
+                            <i class="fas fa-cog text-gray-400"></i>
+                            <span>Worker: <strong class="text-gray-900">#{{ workerNum }}</strong></span>
+                        </div>
+                    </div>
                 </div>
-            </div>
+
+                <!-- Messages Container -->
+                <div 
+                    ref="messagesContainer"
+                    class="flex-1 overflow-y-auto px-4 py-6"
+                    style="scroll-behavior: smooth;"
+                >
+                    <div class="max-w-4xl mx-auto">
+                        <!-- Empty State -->
+                        <div v-if="interactions.length === 0" class="text-center py-16">
+                            <div class="inline-flex items-center justify-center w-16 h-16 bg-blue-100 rounded-full mb-4">
+                                <i class="fas fa-comments text-2xl text-blue-600"></i>
+                            </div>
+                            <h3 class="text-xl font-semibold text-gray-800 mb-2">Start a conversation</h3>
+                            <p class="text-gray-600">
+                                {{ joinedGroupId ? 'Type a message below to begin' : 'Join or create a group to start chatting' }}
+                            </p>
+                        </div>
+
+                        <!-- Messages -->
+                        <interaction-messages 
+                            :interactions="interactions"
+                            @edit="requestEdit"
+                            @delete="requestDelete"
+                        ></interaction-messages>
+                    </div>
+                </div>
+
+                <!-- Input Area -->
+                <div class="bg-white border-t border-gray-200 p-4">
+                    <div class="max-w-4xl mx-auto">
+                        <div class="flex gap-3">
+                            <div class="flex-1">
+                                <textarea 
+                                    v-model="messageInput"
+                                    @keydown.enter.exact.prevent="sendMessage"
+                                    :disabled="!joinedGroupId"
+                                    placeholder="Type your message... (Press Enter to send)"
+                                    rows="1"
+                                    class="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-all resize-none disabled:bg-gray-100 disabled:cursor-not-allowed"
+                                    style="max-height: 200px;"
+                                ></textarea>
+                            </div>
+                            <div class="flex gap-2">
+                                <button 
+                                    @click="sendMessage"
+                                    :disabled="!messageInput.trim() || !joinedGroupId"
+                                    class="px-6 py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-all disabled:bg-gray-300 disabled:cursor-not-allowed font-medium shadow-sm hover:shadow-md"
+                                >
+                                    <i class="fas fa-paper-plane mr-2"></i>Send
+                                </button>
+                                <button 
+                                    v-if="hasActiveInteraction"
+                                    @click="abortJob"
+                                    class="px-4 py-3 bg-red-500 text-white rounded-xl hover:bg-red-600 transition-all font-medium shadow-sm"
+                                >
+                                    <i class="fas fa-stop"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </main>
         </div>
     </div>
 
     <script>
+        // Configure Marked
+        marked.setOptions({
+            breaks: true,
+            gfm: true,
+            headerIds: true,
+            mangle: false
+        });
+
+        // ============================
+        // Component: Notification Messages
+        // ============================
+        Vue.component('notification-messages', {
+            props: ['messages'],
+            template: `
+                <div class="fixed top-4 right-4 z-50 space-y-2" style="width: 320px;">
+                    <div 
+                        v-for="m in messages" 
+                        :key="m.id" 
+                        class="px-4 py-3 rounded-lg shadow-lg animate-slide-in text-sm font-medium"
+                        :class="{
+                            'bg-blue-500 text-white': m.status === 'info',
+                            'bg-green-500 text-white': m.status === 'success',
+                            'bg-yellow-500 text-gray-900': m.status === 'warning',
+                            'bg-red-500 text-white': m.status === 'error'
+                        }"
+                    >
+                        <div class="flex items-center gap-2">
+                            <i :class="{
+                                'fas fa-info-circle': m.status === 'info',
+                                'fas fa-check-circle': m.status === 'success',
+                                'fas fa-exclamation-triangle': m.status === 'warning',
+                                'fas fa-times-circle': m.status === 'error'
+                            }"></i>
+                            <span>{{ m.text }}</span>
+                        </div>
+                    </div>
+                </div>
+            `
+        });
+
+        // ============================
+        // Component: Groups List
+        // ============================
+        Vue.component('groups-list', {
+            props: ['groups', 'joinedGroupId'],
+            template: `
+                <div class="space-y-2">
+                    <group-item
+                        v-for="group in groups"
+                        :key="group.id"
+                        :group="group"
+                        :is-joined="joinedGroupId === group.id"
+                        @join="$emit('join', $event)"
+                        @delete="$emit('delete', $event)"
+                    ></group-item>
+                </div>
+            `
+        });
+
+        // ============================
+        // Component: Group Item
+        // ============================
+        Vue.component('group-item', {
+            props: ['group', 'isJoined'],
+            data() {
+                return {
+                    showDropdown: false
+                };
+            },
+            methods: {
+                toggleDropdown(e) {
+                    e.stopPropagation();
+                    this.showDropdown = !this.showDropdown;
+                },
+                handleDelete(e) {
+                    e.stopPropagation();
+                    this.showDropdown = false;
+                    this.$emit('delete', this.group.id);
+                },
+                handleJoin() {
+                    if (!this.isJoined) {
+                        this.$emit('join', this.group.id);
+                    }
+                }
+            },
+            template: `
+                <div 
+                    @click="handleJoin"
+                    class="relative p-3 rounded-lg border-2 transition-all cursor-pointer"
+                    :class="isJoined ? 'bg-blue-50 border-blue-300' : 'bg-gray-50 border-gray-200 hover:bg-gray-100 hover:border-gray-300'"
+                >
+                    <div class="flex items-start justify-between">
+                        <div class="flex-1 min-w-0 pr-2">
+                            <div class="flex items-center gap-2 mb-1">
+                                <h3 class="font-semibold text-sm text-gray-900 truncate">{{ group.name }}</h3>
+                                <span 
+                                    class="text-xs px-2 py-0.5 rounded-full font-medium uppercase flex-shrink-0"
+                                    :class="{
+                                        'bg-blue-100 text-blue-700': group.status === 'created',
+                                        'bg-purple-100 text-purple-700': group.status === 'queued',
+                                        'bg-yellow-100 text-yellow-700': group.status === 'in_progress',
+                                        'bg-green-100 text-green-700': group.status === 'completed',
+                                        'bg-red-100 text-red-700': group.status === 'failed',
+                                        'bg-pink-100 text-pink-700': group.status === 'aborted',
+                                        'bg-green-100 text-green-700': group.status === 'active',
+                                        'bg-gray-100 text-gray-700': group.status === 'deleted'
+                                    }"
+                                >
+                                    {{ group.status }}
+                                </span>
+                            </div>
+                            <p class="text-xs text-gray-500 font-mono truncate">{{ group.id }}</p>
+                        </div>
+                        
+                        <!-- Dropdown Button -->
+                        <div class="relative flex-shrink-0">
+                            <button 
+                                @click="toggleDropdown"
+                                class="p-1.5 hover:bg-gray-200 rounded-md transition-colors"
+                                :class="isJoined ? 'hover:bg-blue-100' : ''"
+                            >
+                                <i class="fas fa-ellipsis-v text-gray-600"></i>
+                            </button>
+                            
+                            <!-- Dropdown Menu -->
+                            <div 
+                                v-show="showDropdown"
+                                @click.stop
+                                class="absolute right-0 mt-1 w-40 bg-white rounded-lg shadow-lg border border-gray-200 z-10 overflow-hidden"
+                            >
+                                <button
+                                    @click="handleDelete"
+                                    class="w-full px-4 py-2 text-left text-sm text-red-600 hover:bg-red-50 transition-colors flex items-center gap-2"
+                                >
+                                    <i class="fas fa-trash"></i>
+                                    <span>Delete Group</span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Joined Indicator -->
+                    <div v-if="isJoined" class="mt-2 flex items-center gap-2 text-xs text-blue-600">
+                        <i class="fas fa-check-circle"></i>
+                        <span class="font-medium">Currently Joined</span>
+                    </div>
+                </div>
+            `
+        });
+
+        // ============================
+        // Component: Interaction Messages
+        // ============================
+        Vue.component('interaction-messages', {
+            props: ['interactions'],
+            methods: {
+                renderMarkdown(text) {
+                    if (!text) return '';
+                    return marked.parse(text);
+                },
+                updateMathJax() {
+                    this.$nextTick(() => {
+                        if (window.MathJax && window.MathJax.typesetPromise) {
+                            MathJax.typesetPromise().catch((err) => console.log('MathJax error:', err));
+                        }
+                    });
+                }
+            },
+            watch: {
+                interactions: {
+                    handler() {
+                        this.updateMathJax();
+                    },
+                    deep: true
+                }
+            },
+            mounted() {
+                this.updateMathJax();
+            },
+            template: `
+                <div class="space-y-6">
+                    <div v-for="item in interactions" :key="item.id" class="animate-fade-in">
+                        <!-- User Message -->
+                        <div class="flex justify-end mb-4">
+                            <div class="max-w-[70%] bg-blue-600 text-white px-4 py-3 rounded-2xl rounded-tr-sm shadow-sm">
+                                <p class="text-sm leading-relaxed whitespace-pre-wrap">{{ item.prompt }}</p>
+                            </div>
+                        </div>
+                        
+                        <!-- Assistant Message -->
+                        <div v-if="item.response || item.status === 'in_progress'" class="flex gap-3 mb-4">
+                            <div class="flex-shrink-0">
+                                <div class="w-8 h-8 rounded-full bg-gradient-to-br from-purple-500 to-indigo-600 flex items-center justify-center text-white font-semibold text-sm shadow-md">
+                                    AI
+                                </div>
+                            </div>
+                            <div class="flex-1 max-w-[85%]">
+                                <div class="bg-white px-4 py-3 rounded-2xl rounded-tl-sm shadow-sm border border-gray-200">
+                                    <div v-if="item.response" class="markdown-content text-sm text-gray-800" v-html="renderMarkdown(item.response)"></div>
+                                    <div v-else class="flex items-center gap-2 text-sm text-gray-500">
+                                        <i class="fas fa-spinner fa-spin"></i>
+                                        <span>Thinking...</span>
+                                    </div>
+                                    <div class="mt-2">
+                                        <span 
+                                            class="inline-block text-xs px-2 py-1 rounded-full font-medium uppercase"
+                                            :class="{
+                                                'bg-blue-100 text-blue-700': item.status === 'created',
+                                                'bg-purple-100 text-purple-700': item.status === 'queued',
+                                                'bg-yellow-100 text-yellow-700 animate-pulse-custom': item.status === 'in_progress',
+                                                'bg-green-100 text-green-700': item.status === 'completed',
+                                                'bg-red-100 text-red-700': item.status === 'failed',
+                                                'bg-pink-100 text-pink-700': item.status === 'aborted',
+                                                'bg-gray-100 text-gray-700': item.status === 'deleted'
+                                            }"
+                                        >
+                                            {{ item.status }}
+                                        </span>
+                                    </div>
+                                </div>
+                                <div class="flex gap-2 mt-2 opacity-0 hover:opacity-100 transition-opacity">
+                                    <button 
+                                        @click="$emit('edit', item)"
+                                        class="text-xs px-3 py-1 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200 transition-colors"
+                                    >
+                                        <i class="fas fa-edit mr-1"></i>Edit
+                                    </button>
+                                    <button 
+                                        @click="$emit('delete', item)"
+                                        class="text-xs px-3 py-1 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200 transition-colors"
+                                    >
+                                        <i class="fas fa-trash mr-1"></i>Delete
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `
+        });
+
+        // ============================
+        // Main Vue Instance
+        // ============================
         new Vue({
             el: "#app",
             data: {
@@ -336,169 +531,257 @@
                 workerNum: null,
                 groupNum: null,
                 groupsInfos: [],
-                joinedGroupId: null
+                joinedGroupId: null,
+                heartbeatTimeout: null,
+                sidebarOpen: true
+            },
+            computed: {
+                hasActiveConnection() {
+                    return this.joinedGroupId || this.queuePosition !== null;
+                },
+                hasActiveInteraction() {
+                    return this.interactions.some(i => i.status === 'in_progress');
+                }
+            },
+            watch: {
+                interactions: {
+                    handler() {
+                        this.$nextTick(() => {
+                            this.scrollToBottom();
+                        });
+                    },
+                    deep: true
+                }
             },
             created() {
-                this.ws = new WebSocket("ws://localhost:9050/connection/client");
+                this.initWebSocket();
+                this.autoJoinGroupFromURL();
+            },
+            methods: {
+                toggleSidebar() {
+                    this.sidebarOpen = !this.sidebarOpen;
+                },
 
-                // AUTO JOIN GROUP DARI ?id=...
-                const params = new URLSearchParams(window.location.search); // "?id=123&x=1" [web:2][web:19]
-                const groupId = params.get("id"); // ambil nilai parameter "id" [web:14]
-                if (groupId) {
-                    // Pastikan dijalankan setelah ws open
+                scrollToBottom() {
+                    const container = this.$refs.messagesContainer;
+                    if (container) {
+                        setTimeout(() => {
+                            container.scrollTop = container.scrollHeight;
+                        }, 100);
+                    }
+                },
+
+                // ============================
+                // WebSocket Initialization
+                // ============================
+                initWebSocket() {
+                    this.ws = new WebSocket("ws://localhost:9050/connection/client");
+                    
                     this.ws.addEventListener("open", () => {
-                        this.joinGroup(groupId);
+                        this.handleAutoJoin();
                     });
-                }
 
-                this.ws.onmessage = (event) => {
+                    this.ws.onclose = () => this.handleConnectionIssue('Closed');
+                    this.ws.onerror = () => this.handleConnectionIssue('Error occurred');
+                    this.ws.onmessage = (event) => this.handleMessage(event);
+                },
+
+                autoJoinGroupFromURL() {
+                    const params = new URLSearchParams(window.location.search);
+                    this.autoJoinGroupId = params.get("id");
+                },
+
+                handleAutoJoin() {
+                    if (this.autoJoinGroupId) {
+                        this.joinGroup(this.autoJoinGroupId);
+                    }
+                },
+
+                // ============================
+                // WebSocket Message Handling
+                // ============================
+                handleMessage(event) {
                     const data = JSON.parse(event.data);
                     console.log(data);
 
-                    // Handle message notifications
                     if (data.message) {
-                        const id = Date.now() + Math.random();
-                        this.messages.push({
-                            id,
-                            text: data.message.text,
-                            status: data.message.status
-                        });
-
-                        setTimeout(() => {
-                            this.messages = this.messages.filter(m => m.id !== id);
-                        }, 5000);
+                        this.showNotification(data.message);
                     }
 
-                    // Handle content updates
-                    const content = data?.content;
-                    if (!content) return;
+                    if (data.content) {
+                        this.updateContent(data.content);
+                    }
+                },
 
+                showNotification(message) {
+                    const id = Date.now() + Math.random();
+                    this.messages.push({
+                        id,
+                        text: message.text,
+                        status: message.status
+                    });
+
+                    setTimeout(() => {
+                        this.messages = this.messages.filter(m => m.id !== id);
+                    }, 5000);
+                },
+
+                updateContent(content) {
                     // Update status properties
-                    if (content.client_num !== undefined && content.client_num !== null) {
-                        this.clientNum = content.client_num;
-                    }
-                    if (content.queue_position !== undefined && content.queue_position !== null) {
-                        this.queuePosition = content.queue_position;
-                    }
-                    if (content.queue_length !== undefined && content.queue_length !== null) {
-                        this.queueLength = content.queue_length;
-                    }
-                    if (content.worker_num !== undefined && content.worker_num !== null) {
-                        this.workerNum = content.worker_num;
-                    }
-                    if (content.group_num !== undefined && content.group_num !== null) {
-                        this.groupNum = content.group_num;
-                    }
-                    if (content.groups_infos !== undefined && content.groups_infos !== null) {
-                        this.groupsInfos = content.groups_infos;
-                    }
-                    if (content.joined_group_id !== undefined && content.joined_group_id !== null) {
-                        this.joinedGroupId = content.joined_group_id;
-                        
-                        const url = new URL(window.location);
-                        if (this.joinedGroupId && this.joinedGroupId !== "") {
-                            url.searchParams.set("id", this.joinedGroupId);
-                        } else {
-                            url.searchParams.delete("id");
+                    const statusProps = [
+                        'client_num', 'queue_position', 'queue_length', 
+                        'worker_num', 'group_num', 'groups_infos', 'joined_group_id'
+                    ];
+
+                    statusProps.forEach(prop => {
+                        if (content[prop] !== undefined && content[prop] !== null) {
+                            const camelProp = prop.replace(/_([a-z])/g, (g) => g[1].toUpperCase());
+                            this[camelProp] = content[prop];
                         }
-                        window.history.replaceState({}, "", url);
+                    });
+
+                    // Update URL with group ID
+                    if (content.joined_group_id !== undefined) {
+                        this.updateURLWithGroupId(content.joined_group_id);
                     }
 
-                    if (content.joined_group_id == "") {
+                    // Clear interactions if left group
+                    if (content.joined_group_id === "") {
                         this.interactions = [];
                     }
 
                     // Handle interaction updates
-                    const interaction = content.interaction;
-                    if (interaction) {
-                        if (interaction.status === "deleted") {
-                            const index = this.interactions.findIndex(
-                                i => i.id === interaction.id
-                            );
-                            if (index !== -1) {
-                                this.interactions.splice(index, 1);
-                            }
-                        } else {
-                            const index = this.interactions.findIndex(
-                                i => i.id === interaction.id
-                            );
-
-                            if (index !== -1) {
-                                this.$set(this.interactions, index, interaction);
-                            } else {
-                                this.interactions.push(interaction);
-                            }
-                        }
+                    if (content.interaction) {
+                        this.updateInteraction(content.interaction);
                     }
-                };
-            },
-            methods: {
+                },
+
+                updateURLWithGroupId(groupId) {
+                    const url = new URL(window.location);
+                    if (groupId && groupId !== "") {
+                        url.searchParams.set("id", groupId);
+                    } else {
+                        url.searchParams.delete("id");
+                    }
+                    window.history.replaceState({}, "", url);
+                },
+
+                updateInteraction(interaction) {
+                    if (interaction.status === "deleted") {
+                        this.removeInteraction(interaction.id);
+                    } else {
+                        this.addOrUpdateInteraction(interaction);
+                    }
+                },
+
+                removeInteraction(id) {
+                    const index = this.interactions.findIndex(i => i.id === id);
+                    if (index !== -1) {
+                        this.interactions.splice(index, 1);
+                    }
+                },
+
+                addOrUpdateInteraction(interaction) {
+                    const index = this.interactions.findIndex(i => i.id === interaction.id);
+                    if (index !== -1) {
+                        this.$set(this.interactions, index, interaction);
+                    } else {
+                        this.interactions.push(interaction);
+                    }
+                },
+
+                // ============================
+                // Connection Management
+                // ============================
+                handleConnectionIssue(eventType) {
+                    console.error(`WebSocket connection: ${eventType}`);
+
+                    if (this.heartbeatTimeout) {
+                        clearTimeout(this.heartbeatTimeout);
+                    }
+
+                    if (this.ws) {
+                        this.ws.onclose = null;
+                        this.ws.onerror = null;
+                        this.ws.close();
+                        this.ws = null;
+                    }
+
+                    // Auto reconnect after 5 seconds
+                    setTimeout(() => {
+                        if (!this.ws || this.ws.readyState === WebSocket.CLOSED) {
+                            console.log('Attempting to reconnect WebSocket...');
+                            this.initWebSocket();
+                        }
+                    }, 5000);
+                },
+
+                // ============================
+                // User Actions
+                // ============================
                 sendMessage() {
                     if (!this.messageInput.trim()) return;
 
-                    this.ws.send(JSON.stringify({
-                        action: "create_interaction",
-                        content: {
-                            input_text: this.messageInput
-                        }
-                    }));
+                    this.sendAction("create_interaction", {
+                        input_text: this.messageInput
+                    });
 
                     this.messageInput = "";
                 },
+
                 abortJob() {
-                    this.ws.send(JSON.stringify({
-                        action: "abort_interaction"
-                    }));
+                    this.sendAction("abort_interaction");
                 },
+
                 requestEdit(item) {
                     const newPrompt = prompt("Edit prompt:", item.prompt);
                     if (newPrompt === null) return;
 
-                    this.ws.send(JSON.stringify({
-                        action: "edit_interaction",
-                        content: {
-                            input_id: item.id,
-                            input_text: newPrompt
-                        }
-                    }));
+                    this.sendAction("edit_interaction", {
+                        input_id: item.id,
+                        input_text: newPrompt
+                    });
                 },
+
                 requestDelete(item) {
-                    if (confirm(`Delete Interaction: ${item.id}`)) {
-                        this.ws.send(JSON.stringify({
-                            action: "delete_interaction",
-                            content: {
-                                input_id: item.id
-                            }
-                        }));
+                    if (confirm(`Delete Interaction: ${item.id}?`)) {
+                        this.sendAction("delete_interaction", {
+                            input_id: item.id
+                        });
                     }
                 },
+
                 createGroup() {
-                    this.ws.send(JSON.stringify({
-                        action: "create_group"
-                    }));
+                    this.sendAction("create_group");
                 },
+
                 joinGroup(groupId) {
-                    this.ws.send(JSON.stringify({
-                        action: "join_group",
-                        content: {
-                            input_id: groupId
-                        }
-                    }));
+                    this.sendAction("join_group", {
+                        input_id: groupId
+                    });
                 },
+
                 deleteGroup(groupId) {
                     if (confirm(`Delete Group: ${groupId}?`)) {
-                        this.ws.send(JSON.stringify({
-                            action: "delete_group",
-                            content: {
-                                input_id: groupId
-                            }
-                        }));
+                        this.sendAction("delete_group", {
+                            input_id: groupId
+                        });
                     }
                 },
+
                 leaveGroup() {
-                    this.ws.send(JSON.stringify({
-                        action: "leave_group"
-                    }));
+                    this.sendAction("leave_group");
+                },
+
+                // ============================
+                // WebSocket Communication
+                // ============================
+                sendAction(action, content = null) {
+                    const payload = { action };
+                    if (content) {
+                        payload.content = content;
+                    }
+                    this.ws.send(JSON.stringify(payload));
                 }
             }
         });
