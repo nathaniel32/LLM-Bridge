@@ -1,18 +1,19 @@
 from typing import TYPE_CHECKING, Optional
-from fastapi import WebSocket, WebSocketDisconnect
-from common.models import WorkerServerActionType, StatusType, ServerWorkerActionType, InputJobContent, ResponseModel, MessageModel, ClientContent, ResponseStreamContent, AbortException
+from fastapi import WebSocket
+from common.models import WorkerServerActionType, ServerWorkerActionType, InputJobContent, ResponseModel, MessageModel, ResponseStreamContent, AbortException
 import logging
 import json
 from server.handler.group_manager import GroupManager
 from server.utils import ws_response
 import asyncio
+from server.handler.base_connection import BaseConnection
 if TYPE_CHECKING:
     from server.handler.connection_manager import ConnectionManager
 
-class WorkerConnection:
+class WorkerConnection(BaseConnection):
     def __init__(self, connection_manager:"ConnectionManager", connection: WebSocket):
-        self.connection_manager = connection_manager
-        self.connection = connection
+        super().__init__(connection_manager, connection)
+
         self.job_event: Optional[asyncio.Event] = None
         self.group_manager: Optional[GroupManager] = None
         self.worker_unsuccess_action: Optional[WorkerServerActionType] = None
@@ -21,9 +22,6 @@ class WorkerConnection:
         self.job_event = None
         self.group_manager = None
         self.worker_unsuccess_action = None
-
-    async def send(self, action=None, content=None):
-        await ws_response(websockets=[self.connection], action=action, content=content)
 
     async def abort_interaction(self):
         if self.job_event:
@@ -52,45 +50,24 @@ class WorkerConnection:
         else:
             raise Exception("Worker busy, please try again later!")
 
-    async def _event_listener(self):
+    async def event_handler(self, event_data):
         try:
-            while True:
-                event_data = await self.connection.receive()
+            response_model = ResponseModel(**json.loads(event_data["text"]))
 
-                if event_data.get("text"):
-                    try:
-                        response_model = ResponseModel(**json.loads(event_data["text"]))
+            await self.group_manager.send(message=response_model.message)
 
-                        await self.group_manager.send(message=response_model.message)
-
-                        match response_model.action:    
-                            case WorkerServerActionType.STREAM_RESPONSE:
-                                assert isinstance(response_model.content, ResponseStreamContent)
-                                self.group_manager.chat_context.active_interaction.add_response_chunk(response_model.content.response)
-                                await self.group_manager.update_active_interaction() # stream
-                            case WorkerServerActionType.ABORTED:
-                                self.worker_unsuccess_action = response_model.action
-                            case WorkerServerActionType.ERROR:
-                                self.worker_unsuccess_action = response_model.action
-                            case WorkerServerActionType.END:
-                                self.job_event.set()
-                            case _:
-                                pass
-                    except Exception as e:
-                        logging.exception(f"Exception: {e}")
-
-        except WebSocketDisconnect:
-            logging.info("WebSocket disconnected")
+            match response_model.action:    
+                case WorkerServerActionType.STREAM_RESPONSE:
+                    assert isinstance(response_model.content, ResponseStreamContent)
+                    self.group_manager.chat_context.active_interaction.add_response_chunk(response_model.content.response)
+                    await self.group_manager.update_active_interaction() # stream
+                case WorkerServerActionType.ABORTED:
+                    self.worker_unsuccess_action = response_model.action
+                case WorkerServerActionType.ERROR:
+                    self.worker_unsuccess_action = response_model.action
+                case WorkerServerActionType.END:
+                    self.job_event.set()
+                case _:
+                    pass
         except Exception as e:
-            logging.error("Unexpected error in websocket listener")
-        finally:
-            logging.info("Worker disconnected!")
-            await self.connection_manager.remove_worker_connection(connection=self)
-            if self.job_event:
-                await self.group_manager.send(message=MessageModel(text="Worker disconnected!", status=StatusType.ERROR))
-                self.worker_unsuccess_action = WorkerServerActionType.ERROR
-                self.job_event.set()
-            
-    async def bind(self):
-        await self.connection_manager.dequeue_job()
-        await self._event_listener()
+            logging.exception(f"Exception: {e}")
