@@ -9,6 +9,7 @@ class GroupStatus(str, Enum):
 
 class InteractionStatus(str, Enum):
     CREATED = "created"
+    QUEUED = "queued"
     IN_PROGRESS = "in_progress"
     FAILED = "failed"
     ABORTED = "aborted"

@@ -63,7 +63,7 @@ class WorkerConnection(BaseConnection):
             case WorkerServerActionType.STREAM_RESPONSE:
                 assert isinstance(response_model.content, ResponseStreamContent)
                 self.group_manager.chat_context.active_interaction.add_response_chunk(response_model.content.response)
-                await self.group_manager.update_active_interaction() # stream
+                await self.group_manager.update_interaction() # stream
             case WorkerServerActionType.ABORTED:
                 self.worker_unsuccess_action = response_model.action
             case WorkerServerActionType.ERROR:

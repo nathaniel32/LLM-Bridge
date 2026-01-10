@@ -1,5 +1,5 @@
 from typing import TYPE_CHECKING, List, Optional
-from common.models import StatusType, ClientContent, MessageModel, AbortException, GroupInfos
+from common.models import StatusType, ClientContent, MessageModel, AbortException, GroupInfos, InteractionStatus
 from server.models import JobRequestError, ChatContext
 from uuid import uuid4
 
@@ -33,13 +33,17 @@ class GroupManager:
         for client_connection in client_connections:
             await client_connection.send(action=action, message=message, content=content)
 
-    async def update_interaction(self, interaction=None):
+    async def update_interaction(self, interaction=None, status:Optional[InteractionStatus]=None):
         if interaction is None:
             interaction = self.chat_context.active_interaction
+
+        if status:
+            interaction.status = status
+        
         await self.send(content=ClientContent(interaction=interaction))
 
     async def register_job(self):
-        await self.update_interaction()
+        await self.update_interaction(status=InteractionStatus.QUEUED)
         await self.connection_manager.enqueue_job(group_manager=self)
         await self.send(message=MessageModel(text="register job"))
 
