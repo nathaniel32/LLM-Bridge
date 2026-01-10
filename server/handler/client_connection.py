@@ -20,6 +20,12 @@ class ClientConnection(BaseConnection):
             case ClientServerActionType.CREATE_GROUP:
                 self.group_manager = await self.connection_manager.add_group_manager()
                 await self.group_manager.add_client(self)
+            case ClientServerActionType.DELETE_GROUP:
+                pass
+            case ClientServerActionType.JOIN_GROUP:
+                pass
+            case ClientServerActionType.LEAVE_GROUP:
+                pass
             case ClientServerActionType.CREATE_INTERACTION:
                 await self.group_manager.create_interaction(prompt=response_model.content.input_text)
             case ClientServerActionType.ABORT_INTERACTION:

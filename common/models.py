@@ -70,6 +70,9 @@ class ClientServerActionType(str, Enum): # client - server
     EDIT_INTERACTION = "edit_interaction"
     DELETE_INTERACTION = "delete_interaction"
     CREATE_GROUP = "create_group"
+    DELETE_GROUP = "delete_group"
+    JOIN_GROUP = "join_group"
+    LEAVE_GROUP = "leave_group"
 
 # action to control client from Server
 class ServerClientActionType(str, Enum): # server - client
