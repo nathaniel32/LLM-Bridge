@@ -11,15 +11,15 @@ class ChatContext(BaseModel):
     interaction_history: List[Interaction] = []
     active_interaction: Optional[Interaction] = None
 
+    def reset_active_interaction(self):
+        self.active_interaction = None
+
     def create_interaction(self, prompt):
         if self.active_interaction is not None:
             raise JobRequestError("Active interaction already exists")
         
         self.active_interaction = Interaction(prompt=prompt)
         self.interaction_history.append(self.active_interaction)
-
-    def reset_active_interaction(self):
-        self.active_interaction = None
 
     def edit_interaction(self, interaction_id, prompt):
         if self.active_interaction is not None:
