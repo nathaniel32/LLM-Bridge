@@ -56,10 +56,10 @@ class ClientContent(BaseModel):
 
 # action to control server from client
 class ClientServerActionType(str, Enum): # client - server
-    ABORT_JOB = "abort_job"
-    CREATE_JOB = "create_job"
-    EDIT_JOB = "edit_job"
-    DELETE_JOB = "delete_job"
+    ABORT_INTERACTION = "abort_interaction"
+    CREATE_INTERACTION = "create_interaction"
+    EDIT_INTERACTION = "edit_interaction"
+    DELETE_INTERACTION = "delete_interaction"
 
 # action to control client from Server
 class ServerClientActionType(str, Enum): # server - client
@@ -67,8 +67,8 @@ class ServerClientActionType(str, Enum): # server - client
 
 # action to control worker from python server
 class ServerWorkerActionType(str, Enum): # server - worker
-    ABORT_JOB = "abort_job"
-    CREATE_JOB = "create_job"
+    ABORT_INTERACTION = "abort_interaction"
+    CREATE_INTERACTION = "create_interaction"
 
 # action to control python server from worker
 class WorkerServerActionType(str, Enum): # worker - server

@@ -86,10 +86,10 @@ class Worker:
             if isinstance(event_data, str):
                 response_model = ResponseModel(**json.loads(event_data))
                 match response_model.action:
-                    case ServerWorkerActionType.CREATE_JOB:
+                    case ServerWorkerActionType.CREATE_INTERACTION:
                         messages = json.loads(response_model.content.input_text)
                         current_task = asyncio.create_task(self.stream_chat(messages=messages))
-                    case ServerWorkerActionType.ABORT_JOB:
+                    case ServerWorkerActionType.ABORT_INTERACTION:
                         await self.send(action=WorkerServerActionType.ABORTED)
                         current_task.cancel()
                     case _:

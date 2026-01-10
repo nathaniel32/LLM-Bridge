@@ -167,7 +167,7 @@
                     if (!this.messageInput.trim()) return;
 
                     this.ws.send(JSON.stringify({
-                        action: "create_job",
+                        action: "create_interaction",
                         content: {
                             input_text: this.messageInput
                         }
@@ -177,7 +177,7 @@
                 },
                 abortJob() {
                     this.ws.send(JSON.stringify({
-                        action: "abort_job"
+                        action: "abort_interaction"
                     }));
                 },
                 requestEdit(item) {
@@ -185,7 +185,7 @@
                     if (newPrompt === null) return;
 
                     this.ws.send(JSON.stringify({
-                        action: "edit_job",
+                        action: "edit_interaction",
                         content: {
                             input_id: item.id,
                             input_text: newPrompt
@@ -195,7 +195,7 @@
                 requestDelete(item) {
                     if (confirm(`Delete Interaction: ${item.id}`)){
                         this.ws.send(JSON.stringify({
-                            action: "delete_job",
+                            action: "delete_interaction",
                             content: {
                                 input_id: item.id
                             }

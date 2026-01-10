@@ -25,9 +25,9 @@ class WorkerConnection:
     async def send(self, action=None, content=None):
         await ws_response(websockets=[self.connection], action=action, content=content)
 
-    async def abort_job(self):
+    async def abort_interaction(self):
         if self.job_event:
-            await self.send(action=ServerWorkerActionType.ABORT_JOB)
+            await self.send(action=ServerWorkerActionType.ABORT_INTERACTION)
             await self.group_manager.send(message=MessageModel(text="Job abort request sended to Worker"))
 
     async def send_job(self, group_manager:GroupManager):
@@ -36,7 +36,7 @@ class WorkerConnection:
                 self.job_event = asyncio.Event()
                 self.group_manager = group_manager
                 await self.group_manager.send(message=MessageModel(text="Sending Job to Worker..."))
-                await self.send(action=ServerWorkerActionType.CREATE_JOB, content=InputJobContent(input_text=group_manager.chat_context.get_chat_message()))
+                await self.send(action=ServerWorkerActionType.CREATE_INTERACTION, content=InputJobContent(input_text=group_manager.chat_context.get_chat_message()))
                 await self.job_event.wait()
                 if self.worker_unsuccess_action == WorkerServerActionType.ERROR:
                     raise Exception(self.worker_unsuccess_action)
