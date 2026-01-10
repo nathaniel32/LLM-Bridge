@@ -1,9 +1,9 @@
 from server.handler.group_manager import GroupManager
 from server.handler.worker_connection import WorkerConnection
-from typing import List
+from typing import List, Optional
 import asyncio
 from server.models import JobRequestError
-from common.models import ClientContent
+from common.models import ClientContent, MessageModel
 
 class ConnectionManager:
     def __init__(self):
@@ -23,6 +23,14 @@ class ConnectionManager:
         for group in groups:
             await group.send(message=message, content=content, action=action)
 
+    async def _notify_queue_position(self, removed_group:Optional[GroupManager]=None):
+        for position, client_session in enumerate(self.waiting_groups):
+            position += 1
+            await client_session.send(message=MessageModel(text=f"Your Waiting Position: {position} of {len(self.waiting_groups)}"), content=ClientContent(queue_position=position))
+
+        if removed_group is not None and removed_group not in self.waiting_groups:
+            await removed_group.send(content=ClientContent(queue_position=0))
+
     async def dequeue_job(self):
         async with self._dispatch_lock:
             if self.waiting_groups:
@@ -31,6 +39,7 @@ class ConnectionManager:
                         group_manager = self.waiting_groups.pop(0)
                         group_manager.worker_connection = worker_connection
                         asyncio.create_task(group_manager.start_process())
+                        await self._notify_queue_position(removed_group=group_manager)
                         return
                 print(f"No WORKER FREE | waiting list : {len(self.waiting_groups)}")
 
@@ -39,6 +48,7 @@ class ConnectionManager:
             if group_manager in self.waiting_groups:
                 raise JobRequestError(f"already in waiting list at position {self.waiting_groups.index(group_manager) + 1}")
             self.waiting_groups.append(group_manager)
+            await self._notify_queue_position()
         await self.dequeue_job()
 
     # add group manager
