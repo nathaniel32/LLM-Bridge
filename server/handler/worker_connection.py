@@ -4,8 +4,8 @@ from common.models import WorkerServerActionType, ServerWorkerActionType, InputC
 from server.handler.group_manager import GroupManager
 import asyncio
 import logging
-from server.handler.base_connection import BaseConnection
 from server.models import RequestError
+from server.handler.base_connection import BaseConnection
 if TYPE_CHECKING:
     from server.handler.connection_manager import ConnectionManager
 
@@ -75,4 +75,5 @@ class WorkerConnection(BaseConnection):
             case WorkerServerActionType.END:
                 self.job_event.set()
             case _:
-                raise RequestError("Unknown action")
+                print(response_model)
+                #raise RequestError("Unknown action")
