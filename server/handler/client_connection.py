@@ -14,10 +14,9 @@ class ClientConnection(BaseConnection):
 
     async def event_handler(self, response_model:ResponseModel):
         match response_model.action:
-            case ClientServerActionType.CREATE_INTERACTION:
-                if self.group_manager is None:
-                    self.group_manager = await self.connection_manager.add_group_manager()
-                    await self.group_manager.add_client(self)
+            case ClientServerActionType.CREATE_GROUP:
+                self.group_manager = await self.connection_manager.add_group_manager()
+                await self.group_manager.add_client(self)
         
         if self.group_manager is not None:
             await self.group_manager.event_handler(response_model)

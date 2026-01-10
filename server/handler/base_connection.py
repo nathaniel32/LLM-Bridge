@@ -31,7 +31,8 @@ class BaseConnection(ABC):
                         response_model = ResponseModel(**json.loads(event_data["text"]))
                         await self.event_handler(response_model)
                     except Exception as e:
-                        await self.send(message=MessageModel(text=str(e), status=StatusType.ERROR))
+                        logging.exception(f"Error: {e}")
+                        await self.send(message=MessageModel(text="Listener Error", status=StatusType.ERROR))
 
         except WebSocketDisconnect:
             logging.info("WebSocket disconnected")

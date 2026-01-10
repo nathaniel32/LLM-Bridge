@@ -37,7 +37,7 @@
             <h2>LLM Chat</h2>
 
             <!-- Status bar untuk menampilkan informasi tambahan -->
-            <div v-if="hasStatus" class="status-bar">
+            <div class="status-bar">
                 <div v-if="jobStatus" class="status-item">
                     <strong>Job Status:</strong> {{ jobStatus }}
                 </div>
@@ -62,6 +62,7 @@
                         <div class="group-id">ID: {{ group.id }}</div>
                     </div>
                 </div>
+                <button @click="createGroup">Create Group</button>
             </div>
 
             <input type="text" v-model="messageInput" placeholder="Type a message">
@@ -96,16 +97,6 @@
                 workerNum: null,
                 groupNum: null,
                 groupsInfos: []
-            },
-            computed: {
-                hasStatus() {
-                    return this.jobStatus !== null || 
-                           this.queuePosition !== null || 
-                           this.queueLength !== null || 
-                           this.workerNum !== null || 
-                           this.groupNum !== null ||
-                           (this.groupsInfos && this.groupsInfos.length > 0);
-                }
             },
             created() {
                 this.ws = new WebSocket("ws://localhost:9050/connection/client");
@@ -218,6 +209,11 @@
                             }
                         }));
                     }
+                },
+                createGroup(){
+                    this.ws.send(JSON.stringify({
+                        action: "create_group"
+                    }));
                 }
             }
         });
