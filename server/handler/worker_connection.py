@@ -48,6 +48,9 @@ class WorkerConnection(BaseConnection):
         else:
             raise Exception("Worker busy, please try again later!")
         
+    async def setup_connection(self):
+        await self.connection_manager.dequeue_job()
+        
     async def cleanup_connection(self):
         logging.info("Worker disconnected!")
         await self.connection_manager.remove_worker_connection(connection=self)

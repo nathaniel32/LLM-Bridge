@@ -12,6 +12,9 @@ class ClientConnection(BaseConnection):
         super().__init__(connection_manager, connection)
         self.group_manager: Optional[GroupManager] = None
 
+    async def setup_connection(self):
+        pass
+
     async def cleanup_connection(self):
         await self.connection_manager.remove_client_connection(self)
 

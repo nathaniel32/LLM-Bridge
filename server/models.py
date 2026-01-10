@@ -27,7 +27,7 @@ class ChatContext(BaseModel):
         
         self.active_interaction = next((i for i in self.interaction_history if i.id == interaction_id), None)
         if self.active_interaction is None:
-            raise ValueError(f"Interaction with id {interaction_id} not found")
+            raise RequestError(f"Interaction with id {interaction_id} not found")
 
         self.active_interaction.prompt = prompt
         self.active_interaction.response = ""
@@ -35,7 +35,7 @@ class ChatContext(BaseModel):
     def delete_interaction(self, interaction_id) -> Interaction:        
         interaction = next((i for i in self.interaction_history if i.id == interaction_id), None)
         if interaction is None:
-            raise ValueError(f"Interaction with id {interaction_id} not found")
+            raise RequestError(f"Interaction with id {interaction_id} not found")
         
         if interaction is self.active_interaction:
             raise RequestError(f"Cannot delete active Interaction!")

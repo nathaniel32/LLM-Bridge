@@ -23,10 +23,15 @@ class BaseConnection(ABC):
         pass
 
     @abstractmethod
-    async def cleanup_connection(self):
+    async def setup_connection(self):
         pass
 
-    async def _event_listener(self):
+    @abstractmethod
+    async def cleanup_connection(self):
+        pass
+    
+    async def bind(self):
+        await self.setup_connection()
         try:
             while True:
                 event_data = await self.connection.receive()
@@ -39,7 +44,7 @@ class BaseConnection(ABC):
                         await self.send(message=MessageModel(text=str(e), status=StatusType.WARNING))
                     except Exception as e:
                         logging.exception(f"Error: {e}")
-                        await self.send(message=MessageModel(text="Listener Error", status=StatusType.ERROR))
+                        await self.send(message=MessageModel(text=f"Listener Error: {e}", status=StatusType.ERROR))
 
         except WebSocketDisconnect:
             logging.info("WebSocket disconnected")
@@ -47,6 +52,3 @@ class BaseConnection(ABC):
             logging.error("Unexpected error in websocket listener")
         finally:
             await self.cleanup_connection()
-    
-    async def bind(self):
-        await self._event_listener()
