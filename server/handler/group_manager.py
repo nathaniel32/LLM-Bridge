@@ -1,7 +1,7 @@
 import json
 from fastapi import WebSocket, WebSocketDisconnect
 from typing import TYPE_CHECKING, List, Optional
-from common.models import ClientServerActionType, StatusType, JobStatus, ClientContent, MessageModel, ResponseModel, AbortException, GroupInfo
+from common.models import ClientServerActionType, StatusType, JobStatus, ClientContent, MessageModel, ResponseModel, AbortException, GroupInfos
 from server.utils import ws_response
 import logging
 from server.models import JobRequestError, ChatContext
@@ -13,7 +13,7 @@ if TYPE_CHECKING:
 
 class GroupManager:
     def __init__(self, connection_manager:"ConnectionManager"):
-        self.group_info = GroupInfo(id=uuid4().hex, name="unnamed")
+        self.group_infos = GroupInfos(id=uuid4().hex, name="unnamed")
         self.connection_manager = connection_manager
         self.client_connections: List[WebSocket] = []
         self.worker_connection: Optional["WorkerConnection"] = None

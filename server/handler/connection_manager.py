@@ -14,6 +14,9 @@ class ConnectionManager:
         self._worker_lock = asyncio.Lock()
         self._dispatch_lock = asyncio.Lock()
 
+    def _get_groups_infos(self):
+        return [gm.group_infos for gm in self.group_managers]
+
     # send to all groups
     async def broadcast(self, message=None, content=None, action=None):
         async with self._group_lock:
@@ -67,7 +70,7 @@ class ConnectionManager:
             self.group_managers.append(manager)
             print("Active Group Manager: ", len(self.group_managers))
         
-        await self.broadcast(content=ClientContent(group_num=len(self.group_managers)))
+        await self.broadcast(content=ClientContent(group_num=len(self.group_managers), groups_infos=self._get_groups_infos()))
         return manager
     
     # remove group manager
@@ -77,7 +80,7 @@ class ConnectionManager:
                 self.group_managers.remove(manager)
                 print("Group Manager removed: ", len(self.group_managers))
         
-        await self.broadcast(content=ClientContent(group_num=len(self.group_managers)))
+        await self.broadcast(content=ClientContent(group_num=len(self.group_managers), groups_infos=self._get_groups_infos()))
 
     async def add_worker_connection(self, websocket) -> WorkerConnection:
         async with self._worker_lock:

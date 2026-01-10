@@ -39,7 +39,7 @@ class InputJobContent(BaseModel):
     input_id: Optional[str] = None
     input_text: Optional[str] = None
 
-class GroupInfo(BaseModel):
+class GroupInfos(BaseModel):
     id: str
     name: str
 
@@ -49,7 +49,7 @@ class ClientContent(BaseModel):
     queue_position: Optional[int] = None
     worker_num: Optional[int] = None
     group_num: Optional[int] = None
-    group_list: Optional[List[GroupInfo]] = None
+    groups_infos: Optional[List[GroupInfos]] = None
     queue_length: Optional[int] = None
 
 #############################################################################################
