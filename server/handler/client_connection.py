@@ -27,10 +27,11 @@ class ClientConnection(BaseConnection):
                 group_id = response_model.content.input_id
                 pass
             case ClientServerActionType.JOIN_GROUP:
-                group_id = response_model.content.input_id
-                pass
+                self.group_manager = self.connection_manager.get_group_by_id(group_id=response_model.content.input_id)
+                await self.group_manager.add_client(self)
             case ClientServerActionType.LEAVE_GROUP:
-                pass
+                await self.group_manager.remove_client(self)
+                self.group_manager = None
             case ClientServerActionType.CREATE_INTERACTION:
                 await self.group_manager.create_interaction(prompt=response_model.content.input_text)
             case ClientServerActionType.ABORT_INTERACTION:

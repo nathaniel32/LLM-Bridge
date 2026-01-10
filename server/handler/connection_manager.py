@@ -19,6 +19,12 @@ class ConnectionManager:
 
     def _get_groups_infos(self):
         return [gm.group_infos for gm in self.group_managers]
+    
+    def get_group_by_id(self, group_id) -> GroupManager:
+        group = next((g for g in self.group_managers if g.group_infos.id == group_id), None)
+        if group is None:
+            raise RequestError(f"Group with id {group_id} not found")
+        return group
 
     # send to all clients
     async def broadcast(self, message=None, content=None, action=None):
