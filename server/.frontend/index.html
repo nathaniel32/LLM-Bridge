@@ -60,6 +60,7 @@
                 <div class="prompt">
                     {{ item.prompt }}
                     <span class="edit" @click="requestEdit(item)">edit</span>
+                    <span class="edit" @click="requestDelete(item)">delete</span>
                 </div>
                 <div class="response">
                     {{ item.response }}
@@ -189,6 +190,16 @@
                             input_text: newPrompt
                         }
                     }));
+                },
+                requestDelete(item) {
+                    if (confirm(`Delete Chat: ${item.id}`)){
+                        this.ws.send(JSON.stringify({
+                            action: "delete_job",
+                            content: {
+                                input_id: item.id
+                            }
+                        }));
+                    }
                 }
             }
         });

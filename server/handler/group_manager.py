@@ -18,13 +18,11 @@ class GroupManager:
         self.client_connections: List[WebSocket] = []
         self.worker_connection: Optional["WorkerConnection"] = None
         self.chat_context = ChatContext()
-        self.abort = False
         self.job_status = JobStatus.IDLE
 
     def reset_state(self):
         self.chat_context.finish_interaction()
         self.worker_connection = None
-        self.abort = False
         self.job_status = JobStatus.IDLE
 
     async def send(self, message=None, content=None, action=None, connections=None):
@@ -48,15 +46,12 @@ class GroupManager:
         self.chat_context.create_interaction(prompt)
         await self.register_job()
     
-    async def edit_job(self, prompt, id):
-        self.chat_context.edit_interaction(id, prompt)
+    async def edit_job(self, prompt, interaction_id):
+        self.chat_context.edit_interaction(interaction_id, prompt)
         await self.register_job()
 
     async def start_process(self):
         try:
-            if self.abort:
-                raise AbortException("Abort in start process!")
-
             self.job_status = JobStatus.IN_PROGRESS
             await self.send(message=MessageModel(text="Starting process..."), content=ClientContent(job_status=self.job_status))
             await self.worker_connection.send_job(self)
@@ -77,15 +72,16 @@ class GroupManager:
             await self.send(message=MessageModel(text="No job is currently running", status=StatusType.WARNING))
             return
         
-        self.abort = True
         await self.send(message=MessageModel(text="trying to abort request...", status=StatusType.WARNING))
-        interaction = self.chat_context.remove_interaction(interaction_id=self.chat_context.active_interaction.id)
-        await self.update_active_interaction(interaction=interaction)
         await self.connection_manager.remove_from_queue(self)
-        if self.worker_connection:
+        if self.job_status == JobStatus.IN_PROGRESS:
             await self.worker_connection.abort_job()
         else:
-            await self.start_process()
+            self.reset_state()
+
+    async def delete_job(self, interaction_id):
+        interaction = self.chat_context.delete_interaction(interaction_id=interaction_id)
+        await self.update_active_interaction(interaction=interaction)
     
     async def _event_listener(self, websocket:WebSocket):
         try:
@@ -101,8 +97,10 @@ class GroupManager:
                                 await self.create_job(prompt=response_model.content.input_text)
                             case ClientServerActionType.ABORT_JOB:
                                 await self.abort_process()
+                            case ClientServerActionType.DELETE_JOB:
+                                await self.delete_job(interaction_id=response_model.content.input_id)
                             case ClientServerActionType.EDIT_JOB:
-                                await self.edit_job(prompt=response_model.content.input_text, id=response_model.content.input_id)
+                                await self.edit_job(prompt=response_model.content.input_text, interaction_id=response_model.content.input_id)
                             case _:
                                 await self.send(message=MessageModel(text="Unknown action", status=StatusType.ERROR))
 

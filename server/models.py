@@ -32,16 +32,16 @@ class ChatContext(BaseModel):
         self.active_interaction.prompt = prompt
         self.active_interaction.response = ""
 
-    def remove_interaction(self, interaction_id) -> Interaction:        
+    def delete_interaction(self, interaction_id) -> Interaction:        
         interaction = next((i for i in self.interaction_history if i.id == interaction_id), None)
         if interaction is None:
             raise ValueError(f"Interaction with id {interaction_id} not found")
         
+        if interaction is self.active_interaction:
+            raise JobRequestError(f"Cannot delete active Interaction!")
+
         self.interaction_history.remove(interaction)
         
-        #if interaction is self.active_interaction:
-        #    self.active_interaction = None
-
         interaction.prompt = ""
         interaction.response = ""
 

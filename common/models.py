@@ -37,7 +37,7 @@ class ResponseStreamContent(BaseModel):
 
 class InputJobContent(BaseModel):
     input_id: Optional[str] = None
-    input_text: str
+    input_text: Optional[str] = None
 
 class GroupInfo(BaseModel):
     id: str
@@ -59,6 +59,7 @@ class ClientServerActionType(str, Enum): # client - server
     ABORT_JOB = "abort_job"
     CREATE_JOB = "create_job"
     EDIT_JOB = "edit_job"
+    DELETE_JOB = "delete_job"
 
 # action to control client from Server
 class ServerClientActionType(str, Enum): # server - client
