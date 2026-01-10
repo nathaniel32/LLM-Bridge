@@ -8,6 +8,7 @@ class JobStatus(str, Enum):
     IN_PROGRESS = "in_progress"
     FAILED = "failed"
     ABORTED = "aborted"
+    DELETED = "deleted"
 
 class StatusType(str, Enum):
     INFO = "info"
@@ -22,6 +23,7 @@ class AbortException(Exception):
 
 class Interaction(BaseModel):
     id: str = Field(default_factory=lambda: uuid4().hex)
+    status: JobStatus = JobStatus.CREATED
     prompt: str
     response: str = ""
 
@@ -35,11 +37,11 @@ class ResponseStreamContent(BaseModel):
     response: str
 
 class InputJobContent(BaseModel):
-    status: JobStatus = JobStatus.CREATED
     input_id: Optional[str] = None
     input_text: Optional[str] = None
 
 class GroupInfos(BaseModel):
+    status: JobStatus = JobStatus.CREATED
     id: str
     name: str
 
