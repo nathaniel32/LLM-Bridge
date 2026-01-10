@@ -4,9 +4,9 @@ from pydantic import BaseModel, Field
 from uuid import uuid4
 
 class JobStatus(str, Enum):
+    IDLE = "idle"
     QUEUED = "queued"
     IN_PROGRESS = "in_progress"
-    COMPLETED = "completed"
     FAILED = "failed"
     ABORTED = "aborted"
 

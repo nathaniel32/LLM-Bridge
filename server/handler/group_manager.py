@@ -17,6 +17,7 @@ class GroupManager:
         self.worker_connection: Optional["WorkerConnection"] = None
         self.chat_context = ChatContext()
         self.abort = False
+        self.job_status = JobStatus.IDLE
 
     async def send(self, message=None, content=None, action=None, connections=None):
         if connections is None:
@@ -30,8 +31,8 @@ class GroupManager:
     async def register_job(self):
         await self.update_active_interaction()
         await self.connection_manager.enqueue_job(group_manager=self)
-        self.status = JobStatus.QUEUED
-        await self.send(content=ClientContent(job_status=self.status))
+        self.job_status = JobStatus.QUEUED
+        await self.send(content=ClientContent(job_status=self.job_status))
 
     async def create_job(self, prompt):
         self.chat_context.create_interaction(prompt)
@@ -43,22 +44,26 @@ class GroupManager:
 
     async def start_process(self):
         try:
-            self.status = JobStatus.IN_PROGRESS
-            await self.send(message=MessageModel(text="Starting process..."), content=ClientContent(job_status=self.status))
+            self.job_status = JobStatus.IN_PROGRESS
+            await self.send(message=MessageModel(text="Starting process..."), content=ClientContent(job_status=self.job_status))
             await self.worker_connection.send_job(self)
             
-            self.status = JobStatus.COMPLETED
-            await self.send(message=MessageModel(text="Process completed!"), content=ClientContent(job_status=self.status))
+            self.job_status = JobStatus.IDLE
+            await self.send(message=MessageModel(text="Process completed!"), content=ClientContent(job_status=self.job_status))
         except AbortException as e:
-            self.status = JobStatus.ABORTED
-            await self.send(message=MessageModel(text=str(e), status=StatusType.WARNING), content=ClientContent(job_status=self.status))
+            self.job_status = JobStatus.ABORTED
+            await self.send(message=MessageModel(text=str(e), status=StatusType.WARNING), content=ClientContent(job_status=self.job_status))
         except Exception as e:
-            self.status = JobStatus.FAILED
-            await self.send(message=MessageModel(text=str(e), status=StatusType.ERROR), content=ClientContent(job_status=self.status))
+            self.job_status = JobStatus.FAILED
+            await self.send(message=MessageModel(text=str(e), status=StatusType.ERROR), content=ClientContent(job_status=self.job_status))
         finally:
             self.chat_context.finish_interaction()
 
     async def abort_process(self):
+        if self.job_status in [JobStatus.IDLE, JobStatus.ABORTED, JobStatus.FAILED]:
+            await self.send(message=MessageModel(text="No job is currently running", status=StatusType.WARNING))
+            return
+        
         self.abort = True
         await self.send(message=MessageModel(text="trying to abort request...", status=StatusType.WARNING))
         if self.worker_connection:
