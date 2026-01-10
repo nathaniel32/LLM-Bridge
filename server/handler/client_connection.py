@@ -61,7 +61,8 @@ class ClientConnection(BaseConnection):
                 await self.group_manager.remove_client(self)
             case ClientServerActionType.CREATE_INTERACTION:
                 if self.group_manager is None:
-                    raise RequestError("Group not found!")
+                    group = await self.connection_manager.add_group_manager()
+                    await group.add_client(self)
                 await self.group_manager.create_interaction(prompt=response_model.content.input_text)
             case ClientServerActionType.ABORT_INTERACTION:
                 if self.group_manager is None:
