@@ -83,7 +83,7 @@ class GroupManager:
             await self.worker_connection.abort_interaction()
         else:
             await self.update_interaction(status=InteractionStatus.ABORTED)
-            await self.send(message=MessageModel(text=str(e), status=StatusType.WARNING))
+            await self.send(message=MessageModel(text="Aborted!!", status=StatusType.WARNING))
             self.reset_state()
 
     async def delete_interaction(self, interaction_id):
