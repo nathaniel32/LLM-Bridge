@@ -47,6 +47,7 @@ class ClientContent(BaseModel):
     job_status: Optional[JobStatus] = None
     interaction: Optional[Interaction] = None
     queue_position: Optional[int] = None
+    client_num: Optional[int] = None
     worker_num: Optional[int] = None
     group_num: Optional[int] = None
     groups_infos: Optional[List[GroupInfos]] = None

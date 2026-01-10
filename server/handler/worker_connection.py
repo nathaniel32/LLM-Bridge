@@ -1,8 +1,9 @@
 from typing import TYPE_CHECKING, Optional
 from fastapi import WebSocket
-from common.models import WorkerServerActionType, ServerWorkerActionType, InputJobContent, ResponseModel, MessageModel, ResponseStreamContent, AbortException
+from common.models import WorkerServerActionType, ServerWorkerActionType, InputJobContent, ResponseModel, MessageModel, ResponseStreamContent, AbortException, StatusType
 from server.handler.group_manager import GroupManager
 import asyncio
+import logging
 from server.handler.base_connection import BaseConnection
 if TYPE_CHECKING:
     from server.handler.connection_manager import ConnectionManager
@@ -46,6 +47,14 @@ class WorkerConnection(BaseConnection):
                 await self.connection_manager.dequeue_job()
         else:
             raise Exception("Worker busy, please try again later!")
+        
+    async def cleanup_connection(self):
+        logging.info("Worker disconnected!")
+        await self.connection_manager.remove_worker_connection(connection=self)
+        if self.job_event:
+            await self.group_manager.send(message=MessageModel(text="Worker disconnected!", status=StatusType.ERROR))
+            self.worker_unsuccess_action = WorkerServerActionType.ERROR
+            self.job_event.set()
 
     async def event_handler(self, response_model:ResponseModel):
         await self.group_manager.send(message=response_model.message)

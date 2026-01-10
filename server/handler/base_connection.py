@@ -21,6 +21,10 @@ class BaseConnection(ABC):
     async def event_handler(self, response_model:ResponseModel):
         pass
 
+    @abstractmethod
+    async def cleanup_connection(self):
+        pass
+
     async def _event_listener(self):
         try:
             while True:
@@ -37,9 +41,9 @@ class BaseConnection(ABC):
         except WebSocketDisconnect:
             logging.info("WebSocket disconnected")
         except Exception as e:
-            logging.exception("Unexpected error in websocket listener")
+            logging.error("Unexpected error in websocket listener")
         finally:
-            logging.info("END!")
+            await self.cleanup_connection()
     
     async def bind(self):
         await self._event_listener()

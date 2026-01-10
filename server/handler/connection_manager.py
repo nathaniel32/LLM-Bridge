@@ -108,4 +108,13 @@ class ConnectionManager:
             self.client_connections.append(connection)
             print("Active Client: ", len(self.client_connections))
         
+        await self.broadcast(content=ClientContent(client_num=len(self.client_connections)))
         return connection
+    
+    async def remove_client_connection(self, connection: ClientConnection):
+        async with self._client_lock:
+            if connection in self.client_connections:
+                self.client_connections.remove(connection)
+                print("Client connection removed: ", len(self.client_connections))
+        
+        await self.broadcast(content=ClientContent(client_num=len(self.client_connections)))
