@@ -74,6 +74,3 @@ class WorkerConnection(BaseConnection):
                 self.worker_unsuccess_action = response_model.action
             case WorkerServerActionType.END:
                 self.job_event.set()
-            case _:
-                print(response_model)
-                #raise RequestError("Unknown action")

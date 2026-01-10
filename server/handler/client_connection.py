@@ -59,5 +59,3 @@ class ClientConnection(BaseConnection):
                 if self.group_manager is None:
                     raise RequestError("Group not found!")
                 await self.group_manager.edit_interaction(prompt=response_model.content.input_text, interaction_id=response_model.content.input_id)
-            case _:
-                raise RequestError("Unknown action")
