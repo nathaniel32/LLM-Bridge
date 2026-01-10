@@ -134,17 +134,28 @@
                         this.groupNum = content.group_num;
                     }
 
-                    // Handle interaction updates (append logic)
+                    // Handle interaction updates (append/update/delete logic)
                     const interaction = content.interaction;
                     if (interaction) {
-                        const index = this.interactions.findIndex(
-                            i => i.id === interaction.id
-                        );
-
-                        if (index !== -1) {
-                            this.$set(this.interactions, index, interaction);
+                        // Cek jika prompt dan response kosong, maka hapus dari list
+                        if (interaction.prompt === "" && interaction.response === "") {
+                            const index = this.interactions.findIndex(
+                                i => i.id === interaction.id
+                            );
+                            if (index !== -1) {
+                                this.interactions.splice(index, 1);
+                            }
                         } else {
-                            this.interactions.push(interaction);
+                            // Update atau tambah interaction
+                            const index = this.interactions.findIndex(
+                                i => i.id === interaction.id
+                            );
+
+                            if (index !== -1) {
+                                this.$set(this.interactions, index, interaction);
+                            } else {
+                                this.interactions.push(interaction);
+                            }
                         }
                     }
                 };
