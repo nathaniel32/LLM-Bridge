@@ -1,4 +1,4 @@
-from typing import Optional, Union
+from typing import Optional, Union, List
 from enum import Enum
 from pydantic import BaseModel, Field
 from uuid import uuid4
@@ -39,12 +39,17 @@ class InputJobContent(BaseModel):
     input_id: Optional[str] = None
     input_text: str
 
+class GroupInfo(BaseModel):
+    id: str
+    name: str
+
 class ClientContent(BaseModel):
     job_status: Optional[JobStatus] = None
     interaction: Optional[Interaction] = None
     queue_position: Optional[int] = None
     worker_num: Optional[int] = None
     group_num: Optional[int] = None
+    group_list: Optional[List[GroupInfo]] = None
     queue_length: Optional[int] = None
 
 #############################################################################################
