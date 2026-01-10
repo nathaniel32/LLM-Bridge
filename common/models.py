@@ -31,6 +31,11 @@ class Interaction(BaseModel):
         self.response += chunk
         return self.response
 
+class GroupInfos(BaseModel):
+    status: JobStatus = JobStatus.CREATED
+    id: str
+    name: str
+
 #############################################################################################
 
 class ResponseStreamContent(BaseModel):
@@ -39,11 +44,6 @@ class ResponseStreamContent(BaseModel):
 class InputJobContent(BaseModel):
     input_id: Optional[str] = None
     input_text: Optional[str] = None
-
-class GroupInfos(BaseModel):
-    status: JobStatus = JobStatus.CREATED
-    id: str
-    name: str
 
 class ClientContent(BaseModel):
     interaction: Optional[Interaction] = None

@@ -6,23 +6,192 @@
     <title>WS LLM Chat</title>
     <script src="https://cdn.jsdelivr.net/npm/vue@2/dist/vue.js"></script>
     <style>
-        body { font-family: sans-serif }
-        .chat { max-width: 720px; margin: auto }
-        .item { margin-bottom: 16px }
-        .prompt { font-weight: bold }
-        .response { white-space: pre-wrap; margin-top: 6px }
-        .edit { font-size: 12px; margin-left: 8px; cursor: pointer }
-        .messages { position: fixed; top: 16px; right: 16px; width: 280px }
-        .msg { padding: 8px 12px; margin-bottom: 8px; border-radius: 4px; color: #fff; font-size: 14px }
-        .info { background: #3498db }
-        .success { background: #2ecc71 }
-        .warning { background: #f1c40f; color: #000 }
-        .error { background: #e74c3c }
-        .status-bar { background: #f5f5f5; padding: 12px; margin-bottom: 16px; border-radius: 4px; font-size: 14px }
-        .status-item { margin-bottom: 4px }
-        .groups-section { margin-top: 12px; padding-top: 12px; border-top: 1px solid #ddd }
-        .group-item { background: #fff; padding: 6px 10px; margin: 4px 0; border-radius: 3px; border: 1px solid #e0e0e0 }
-        .group-id { font-family: monospace; color: #666; font-size: 12px }
+        body { font-family: sans-serif; margin: 0; padding: 0; background: #f8f9fa }
+        .chat { max-width: 920px; margin: auto; padding: 20px }
+        
+        /* Status Badge Styles */
+        .badge {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-left: 8px;
+        }
+        .badge-created { background: #e3f2fd; color: #1976d2 }
+        .badge-in_progress { background: #fff3e0; color: #f57c00 }
+        .badge-failed { background: #ffebee; color: #c62828 }
+        .badge-aborted { background: #fce4ec; color: #c2185b }
+        .badge-deleted { background: #f5f5f5; color: #757575 }
+        
+        /* Interaction Styles */
+        .item {
+            background: #fff;
+            margin-bottom: 16px;
+            padding: 16px;
+            border-radius: 8px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        .prompt {
+            font-weight: bold;
+            font-size: 15px;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .prompt-text { flex: 1 }
+        .actions {
+            display: flex;
+            gap: 8px;
+        }
+        .edit {
+            font-size: 12px;
+            cursor: pointer;
+            padding: 4px 8px;
+            background: #f0f0f0;
+            border-radius: 4px;
+            font-weight: normal;
+        }
+        .edit:hover { background: #e0e0e0 }
+        .response {
+            white-space: pre-wrap;
+            margin-top: 8px;
+            color: #333;
+            line-height: 1.6;
+            padding-left: 12px;
+            border-left: 3px solid #e0e0e0;
+        }
+        
+        /* Messages (notifications) */
+        .messages {
+            position: fixed;
+            top: 16px;
+            right: 16px;
+            width: 320px;
+            z-index: 1000;
+        }
+        .msg {
+            padding: 12px 16px;
+            margin-bottom: 8px;
+            border-radius: 6px;
+            color: #fff;
+            font-size: 14px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+        }
+        .info { background: #2196f3 }
+        .success { background: #4caf50 }
+        .warning { background: #ff9800; color: #000 }
+        .error { background: #f44336 }
+        
+        /* Status Bar */
+        .status-bar {
+            background: #fff;
+            padding: 16px;
+            margin-bottom: 20px;
+            border-radius: 8px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        .status-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+        .status-item {
+            padding: 8px 12px;
+            background: #f8f9fa;
+            border-radius: 6px;
+            font-size: 13px;
+        }
+        .status-item strong {
+            display: block;
+            color: #666;
+            font-size: 11px;
+            margin-bottom: 4px;
+        }
+        .status-value {
+            font-size: 18px;
+            font-weight: 600;
+            color: #333;
+        }
+        
+        /* Groups Section */
+        .groups-section {
+            margin-top: 16px;
+            padding-top: 16px;
+            border-top: 1px solid #e0e0e0;
+        }
+        .groups-header {
+            font-weight: 600;
+            margin-bottom: 12px;
+            font-size: 14px;
+            color: #333;
+        }
+        .group-item {
+            background: #f8f9fa;
+            padding: 10px 14px;
+            margin: 6px 0;
+            border-radius: 6px;
+            border: 1px solid #e0e0e0;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .group-info { flex: 1 }
+        .group-name {
+            font-weight: 600;
+            font-size: 14px;
+            margin-bottom: 4px;
+        }
+        .group-id {
+            font-family: monospace;
+            color: #666;
+            font-size: 11px;
+        }
+        
+        /* Input Section */
+        .input-section {
+            background: #fff;
+            padding: 16px;
+            border-radius: 8px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+            display: flex;
+            gap: 8px;
+        }
+        input[type="text"] {
+            flex: 1;
+            padding: 10px 14px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 14px;
+        }
+        input[type="text"]:focus {
+            outline: none;
+            border-color: #2196f3;
+        }
+        button {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        button:hover { opacity: 0.9; transform: translateY(-1px) }
+        .btn-send { background: #2196f3; color: #fff }
+        .btn-abort { background: #f44336; color: #fff }
+        .btn-create-group { background: #4caf50; color: #fff; width: 100%; margin-top: 12px }
+        
+        h2 {
+            margin-top: 0;
+            margin-bottom: 20px;
+            color: #333;
+        }
     </style>
 </head>
 <body>
@@ -34,48 +203,75 @@
         </div>
 
         <div class="chat">
-            <h2>LLM Chat</h2>
+            <h2>🤖 LLM Chat</h2>
 
-            <!-- Status bar untuk menampilkan informasi tambahan -->
+            <!-- Status Bar -->
             <div class="status-bar">
-                <div v-if="jobStatus" class="status-item">
-                    <strong>Job Status:</strong> {{ jobStatus }}
-                </div>
-                <div v-if="queuePosition !== null" class="status-item">
-                    <strong>Queue Position:</strong> {{ queuePosition }}
-                </div>
-                <div v-if="queueLength !== null" class="status-item">
-                    <strong>Queue Length:</strong> {{ queueLength }}
-                </div>
-                <div v-if="workerNum !== null" class="status-item">
-                    <strong>Worker #:</strong> {{ workerNum }}
-                </div>
-                <div v-if="groupNum !== null" class="status-item">
-                    <strong>Group #:</strong> {{ groupNum }}
+                <div class="status-grid">
+                    <div class="status-item" v-if="queuePosition !== null">
+                        <strong>Queue Position</strong>
+                        <div class="status-value">{{ queuePosition }}</div>
+                    </div>
+                    <div class="status-item" v-if="queueLength !== null">
+                        <strong>Queue Length</strong>
+                        <div class="status-value">{{ queueLength }}</div>
+                    </div>
+                    <div class="status-item" v-if="workerNum !== null">
+                        <strong>Worker #</strong>
+                        <div class="status-value">{{ workerNum }}</div>
+                    </div>
+                    <div class="status-item" v-if="groupNum !== null">
+                        <strong>Group #</strong>
+                        <div class="status-value">{{ groupNum }}</div>
+                    </div>
                 </div>
 
                 <!-- Groups Info Section -->
                 <div v-if="groupsInfos && groupsInfos.length > 0" class="groups-section">
-                    <strong>Groups:</strong>
+                    <div class="groups-header">📁 Groups</div>
                     <div v-for="group in groupsInfos" :key="group.id" class="group-item">
-                        <div><strong>{{ group.name }}</strong></div>
-                        <div class="group-id">ID: {{ group.id }}</div>
+                        <div class="group-info">
+                            <div class="group-name">{{ group.name }}</div>
+                            <div class="group-id">ID: {{ group.id }}</div>
+                        </div>
+                        <span class="badge" :class="'badge-' + group.status">
+                            {{ group.status }}
+                        </span>
                     </div>
                 </div>
-                <button @click="createGroup">Create Group</button>
+                
+                <button class="btn-create-group" @click="createGroup">
+                    ➕ Create New Group
+                </button>
             </div>
 
-            <input type="text" v-model="messageInput" placeholder="Type a message">
-            <button @click="sendMessage">Send</button>
-            <button @click="abortJob">Abort</button>
+            <!-- Input Section -->
+            <div class="input-section">
+                <input 
+                    type="text" 
+                    v-model="messageInput" 
+                    @keyup.enter="sendMessage"
+                    placeholder="Type your message here..."
+                >
+                <button class="btn-send" @click="sendMessage">Send</button>
+                <button class="btn-abort" @click="abortJob">Abort</button>
+            </div>
 
+            <!-- Interactions -->
             <div v-for="item in interactions" :key="item.id" class="item">
                 <div class="prompt">
-                    {{ item.prompt }}
-                    <span class="edit" @click="requestEdit(item)">edit</span>
-                    <span class="edit" @click="requestDelete(item)">delete</span>
+                    <span class="prompt-text">
+                        {{ item.prompt }}
+                        <span class="badge" :class="'badge-' + item.status">
+                            {{ item.status }}
+                        </span>
+                    </span>
+                    <div class="actions">
+                        <span class="edit" @click="requestEdit(item)">✏️ Edit</span>
+                        <span class="edit" @click="requestDelete(item)">🗑️ Delete</span>
+                    </div>
                 </div>
-                <div class="response">
+                <div class="response" v-if="item.response">
                     {{ item.response }}
                 </div>
             </div>
@@ -90,8 +286,6 @@
                 messageInput: "",
                 interactions: [],
                 messages: [],
-                // Properti tambahan dari ClientContent
-                jobStatus: null,
                 queuePosition: null,
                 queueLength: null,
                 workerNum: null,
@@ -103,7 +297,6 @@
 
                 this.ws.onmessage = (event) => {
                     const data = JSON.parse(event.data);
-
                     console.log(data);
 
                     // Handle message notifications
@@ -124,7 +317,7 @@
                     const content = data?.content;
                     if (!content) return;
 
-                    // Update status properties (if not null, update; otherwise ignore)
+                    // Update status properties
                     if (content.queue_position !== undefined && content.queue_position !== null) {
                         this.queuePosition = content.queue_position;
                     }
@@ -141,11 +334,11 @@
                         this.groupsInfos = content.groups_infos;
                     }
 
-                    // Handle interaction updates (append/update/delete logic)
+                    // Handle interaction updates
                     const interaction = content.interaction;
                     if (interaction) {
-                        // Cek jika prompt dan response kosong, maka hapus dari list
-                        if (interaction.prompt === "" && interaction.response === "") {
+                        // Cek jika status adalah DELETED, maka hapus dari list
+                        if (interaction.status === "deleted") {
                             const index = this.interactions.findIndex(
                                 i => i.id === interaction.id
                             );
@@ -198,7 +391,7 @@
                     }));
                 },
                 requestDelete(item) {
-                    if (confirm(`Delete Interaction: ${item.id}`)){
+                    if (confirm(`Delete Interaction: ${item.id}`)) {
                         this.ws.send(JSON.stringify({
                             action: "delete_interaction",
                             content: {
@@ -207,7 +400,7 @@
                         }));
                     }
                 },
-                createGroup(){
+                createGroup() {
                     this.ws.send(JSON.stringify({
                         action: "create_group"
                     }));
