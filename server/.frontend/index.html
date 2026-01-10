@@ -251,6 +251,10 @@
                         <strong>Group #</strong>
                         <div class="status-value">{{ groupNum }}</div>
                     </div>
+                    <div class="status-item" v-if="groupNum !== null">
+                        <strong>Joined Group ID</strong>
+                        <div class="status-value">{{ joinedGroupId }}</div>
+                    </div>
                 </div>
 
                 <!-- Groups Info Section -->
@@ -327,7 +331,8 @@
                 queueLength: null,
                 workerNum: null,
                 groupNum: null,
-                groupsInfos: []
+                groupsInfos: [],
+                joinedGroupId: null
             },
             created() {
                 this.ws = new WebSocket("ws://localhost:9050/connection/client");
@@ -372,6 +377,14 @@
                     }
                     if (content.groups_infos !== undefined && content.groups_infos !== null) {
                         this.groupsInfos = content.groups_infos;
+                    }
+                    if (content.joined_group_id !== undefined && content.joined_group_id !== null) {
+                        this.joinedGroupId = content.joined_group_id;
+                    }
+
+                    if (content.joined_group_id == "") {
+                        console.log("OK", content);
+                        this.interactions = [];
                     }
 
                     // Handle interaction updates
