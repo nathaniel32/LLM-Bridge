@@ -125,9 +125,6 @@
                     if (!content) return;
 
                     // Update status properties (if not null, update; otherwise ignore)
-                    if (content.job_status !== undefined && content.job_status !== null) {
-                        this.jobStatus = content.job_status;
-                    }
                     if (content.queue_position !== undefined && content.queue_position !== null) {
                         this.queuePosition = content.queue_position;
                     }

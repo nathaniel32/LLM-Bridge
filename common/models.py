@@ -4,8 +4,6 @@ from pydantic import BaseModel, Field
 from uuid import uuid4
 
 class JobStatus(str, Enum):
-    IDLE = "idle"
-    QUEUED = "queued"
     IN_PROGRESS = "in_progress"
     FAILED = "failed"
     ABORTED = "aborted"
@@ -44,7 +42,6 @@ class GroupInfos(BaseModel):
     name: str
 
 class ClientContent(BaseModel):
-    job_status: Optional[JobStatus] = None
     interaction: Optional[Interaction] = None
     queue_position: Optional[int] = None
     client_num: Optional[int] = None
