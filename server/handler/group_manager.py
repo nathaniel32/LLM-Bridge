@@ -1,6 +1,6 @@
 from typing import TYPE_CHECKING, List, Optional
 from common.models import StatusType, ClientContent, MessageModel, AbortException, GroupInfos, InteractionStatus
-from server.models import JobRequestError, ChatContext
+from server.models import ChatContext
 from uuid import uuid4
 
 if TYPE_CHECKING:
@@ -50,19 +50,13 @@ class GroupManager:
         await self.send(message=MessageModel(text="register job"))
 
     async def create_interaction(self, prompt):
-        try:
-            self.chat_context.create_interaction(prompt)
-            await self.register_job()
-        except JobRequestError as e:
-            await self.send(message=MessageModel(text=str(e), status=StatusType.WARNING))
+        self.chat_context.create_interaction(prompt)
+        await self.register_job()
 
     async def edit_interaction(self, prompt, interaction_id):
-        try:
-            self.chat_context.edit_interaction(interaction_id, prompt)
-            await self.register_job()
-        except JobRequestError as e:
-            await self.send(message=MessageModel(text=str(e), status=StatusType.WARNING))
-
+        self.chat_context.edit_interaction(interaction_id, prompt)
+        await self.register_job()
+        
     async def start_job(self):
         try:
             await self.update_interaction(status=InteractionStatus.IN_PROGRESS)

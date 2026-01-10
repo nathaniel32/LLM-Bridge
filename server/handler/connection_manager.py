@@ -3,7 +3,7 @@ from server.handler.worker_connection import WorkerConnection
 from server.handler.client_connection import ClientConnection
 from typing import List, Optional
 import asyncio
-from server.models import JobRequestError
+from server.models import RequestError
 from common.models import ClientContent, MessageModel, StatusType
 
 class ConnectionManager:
@@ -61,7 +61,7 @@ class ConnectionManager:
     async def enqueue_job(self, group_manager:GroupManager):
         async with self._dispatch_lock:
             if group_manager in self.waiting_groups:
-                raise JobRequestError(f"already in waiting list at position {self.waiting_groups.index(group_manager) + 1}")
+                raise RequestError(f"already in waiting list at position {self.waiting_groups.index(group_manager) + 1}")
             self.waiting_groups.append(group_manager)
             await self._notify_queue_position()
         await self.dequeue_job()

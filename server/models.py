@@ -3,7 +3,7 @@ from typing import List, Optional
 from common.models import Interaction, InteractionStatus
 import json
 
-class JobRequestError(Exception):
+class RequestError(Exception):
     pass
 
 class ChatContext(BaseModel):
@@ -16,14 +16,14 @@ class ChatContext(BaseModel):
 
     def create_interaction(self, prompt):
         if self.active_interaction is not None:
-            raise JobRequestError("Active interaction already exists")
+            raise RequestError("Active interaction already exists")
         
         self.active_interaction = Interaction(prompt=prompt)
         self.interaction_history.append(self.active_interaction)
 
     def edit_interaction(self, interaction_id, prompt):
         if self.active_interaction is not None:
-            raise JobRequestError("Cannot edit while active interaction exists")
+            raise RequestError("Cannot edit while active interaction exists")
         
         self.active_interaction = next((i for i in self.interaction_history if i.id == interaction_id), None)
         if self.active_interaction is None:
@@ -38,7 +38,7 @@ class ChatContext(BaseModel):
             raise ValueError(f"Interaction with id {interaction_id} not found")
         
         if interaction is self.active_interaction:
-            raise JobRequestError(f"Cannot delete active Interaction!")
+            raise RequestError(f"Cannot delete active Interaction!")
 
         self.interaction_history.remove(interaction)
         

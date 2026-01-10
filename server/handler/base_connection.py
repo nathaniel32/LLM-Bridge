@@ -4,6 +4,7 @@ from server.utils import ws_response
 import logging
 from abc import ABC, abstractmethod
 from common.models import MessageModel, StatusType, ResponseModel
+from server.models import RequestError
 import json
 
 if TYPE_CHECKING:
@@ -34,6 +35,8 @@ class BaseConnection(ABC):
                     try:
                         response_model = ResponseModel(**json.loads(event_data["text"]))
                         await self.event_handler(response_model)
+                    except RequestError as e:
+                        await self.send(message=MessageModel(text=str(e), status=StatusType.WARNING))
                     except Exception as e:
                         logging.exception(f"Error: {e}")
                         await self.send(message=MessageModel(text="Listener Error", status=StatusType.ERROR))
