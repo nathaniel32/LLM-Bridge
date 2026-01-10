@@ -208,6 +208,10 @@
             <!-- Status Bar -->
             <div class="status-bar">
                 <div class="status-grid">
+                    <div class="status-item" v-if="clientNum !== null">
+                        <strong>Client #</strong>
+                        <div class="status-value">{{ clientNum }}</div>
+                    </div>
                     <div class="status-item" v-if="queuePosition !== null">
                         <strong>Queue Position</strong>
                         <div class="status-value">{{ queuePosition }}</div>
@@ -286,6 +290,7 @@
                 messageInput: "",
                 interactions: [],
                 messages: [],
+                clientNum: null,
                 queuePosition: null,
                 queueLength: null,
                 workerNum: null,
@@ -318,6 +323,9 @@
                     if (!content) return;
 
                     // Update status properties
+                    if (content.client_num !== undefined && content.client_num !== null) {
+                        this.clientNum = content.client_num;
+                    }
                     if (content.queue_position !== undefined && content.queue_position !== null) {
                         this.queuePosition = content.queue_position;
                     }
