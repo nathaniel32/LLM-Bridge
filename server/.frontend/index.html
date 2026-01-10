@@ -259,7 +259,12 @@
 
                 <!-- Groups Info Section -->
                 <div v-if="groupsInfos && groupsInfos.length > 0" class="groups-section">
-                    <div v-for="group in groupsInfos" :key="group.id" class="group-item" :style="joinedGroupId === group.id ? 'background-color: #e3f2fd' : ''">
+                    <div 
+                        v-for="group in groupsInfos" 
+                        :key="group.id" 
+                        class="group-item" 
+                        :style="joinedGroupId === group.id ? 'background-color: #e3f2fd' : ''"
+                    >
                         <div class="group-info">
                             <div class="group-name">{{ group.name }}</div>
                             <div class="group-id">ID: {{ group.id }}</div>
@@ -336,6 +341,16 @@
             created() {
                 this.ws = new WebSocket("ws://localhost:9050/connection/client");
 
+                // AUTO JOIN GROUP DARI ?id=...
+                const params = new URLSearchParams(window.location.search); // "?id=123&x=1" [web:2][web:19]
+                const groupId = params.get("id"); // ambil nilai parameter "id" [web:14]
+                if (groupId) {
+                    // Pastikan dijalankan setelah ws open
+                    this.ws.addEventListener("open", () => {
+                        this.joinGroup(groupId);
+                    });
+                }
+
                 this.ws.onmessage = (event) => {
                     const data = JSON.parse(event.data);
                     console.log(data);
@@ -379,6 +394,14 @@
                     }
                     if (content.joined_group_id !== undefined && content.joined_group_id !== null) {
                         this.joinedGroupId = content.joined_group_id;
+                        
+                        const url = new URL(window.location);
+                        if (this.joinedGroupId && this.joinedGroupId !== "") {
+                            url.searchParams.set("id", this.joinedGroupId);
+                        } else {
+                            url.searchParams.delete("id");
+                        }
+                        window.history.replaceState({}, "", url);
                     }
 
                     if (content.joined_group_id == "") {
@@ -388,7 +411,6 @@
                     // Handle interaction updates
                     const interaction = content.interaction;
                     if (interaction) {
-                        // Cek jika status adalah DELETED, maka hapus dari list
                         if (interaction.status === "deleted") {
                             const index = this.interactions.findIndex(
                                 i => i.id === interaction.id
@@ -397,7 +419,6 @@
                                 this.interactions.splice(index, 1);
                             }
                         } else {
-                            // Update atau tambah interaction
                             const index = this.interactions.findIndex(
                                 i => i.id === interaction.id
                             );
