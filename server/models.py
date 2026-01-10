@@ -1,6 +1,6 @@
 from pydantic import BaseModel
 from typing import List, Optional
-from common.models import Interaction
+from common.models import Interaction, JobStatus
 import json
 
 class JobRequestError(Exception):
@@ -42,8 +42,7 @@ class ChatContext(BaseModel):
 
         self.interaction_history.remove(interaction)
         
-        interaction.prompt = ""
-        interaction.response = ""
+        interaction.status = JobStatus.DELETED
 
         return interaction
     
