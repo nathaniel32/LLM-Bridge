@@ -2,10 +2,11 @@ from typing import TYPE_CHECKING
 from fastapi import WebSocket, WebSocketDisconnect
 from server.utils import ws_response
 import logging
+from abc import ABC, abstractmethod
 if TYPE_CHECKING:
     from server.handler.connection_manager import ConnectionManager
 
-class BaseConnection:
+class BaseConnection(ABC):
     def __init__(self, connection_manager:"ConnectionManager", connection: WebSocket):
         self.connection_manager = connection_manager
         self.connection = connection
@@ -13,6 +14,7 @@ class BaseConnection:
     async def send(self, message=None, content=None, action=None):
         await ws_response(websockets=[self.connection], action=action, message=message, content=content)
 
+    @abstractmethod
     async def event_handler(event_data):
         pass
 
