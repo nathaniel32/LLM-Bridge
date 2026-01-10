@@ -3,6 +3,7 @@ from server.handler.worker_connection import WorkerConnection
 from typing import List
 import asyncio
 from server.models import JobRequestError
+from common.models import ClientContent
 
 class ConnectionManager:
     def __init__(self):
@@ -14,13 +15,13 @@ class ConnectionManager:
         self._dispatch_lock = asyncio.Lock()
 
     # send to all groups
-    async def _broadcast(self):
+    async def broadcast(self, message=None, content=None, action=None):
         async with self._group_lock:
             groups = self.group_managers.copy()
         
         # Lockless broadcast (avoids deadlock)
         for group in groups:
-            print(group)
+            await group.send(message=message, content=content, action=action)
 
     async def dequeue_job(self):
         async with self._dispatch_lock:
@@ -47,6 +48,7 @@ class ConnectionManager:
             self.group_managers.append(manager)
             print("Active Group Manager: ", len(self.group_managers))
         
+        await self.broadcast(content=ClientContent(group_num=len(self.group_managers)))
         return manager
     
     # remove group manager
@@ -56,7 +58,7 @@ class ConnectionManager:
                 self.group_managers.remove(manager)
                 print("Group Manager removed: ", len(self.group_managers))
         
-        await self._broadcast()
+        await self.broadcast(content=ClientContent(group_num=len(self.group_managers)))
 
     async def add_worker_connection(self, websocket) -> WorkerConnection:
         async with self._worker_lock:
@@ -64,7 +66,7 @@ class ConnectionManager:
             self.worker_connections.append(connection)
             print("Active worker connection: ", len(self.worker_connections))
         
-        await self._broadcast()
+        await self.broadcast(content=ClientContent(worker_num=len(self.worker_connections)))
         return connection
 
     async def remove_worker_connection(self, connection: WorkerConnection):
@@ -73,4 +75,4 @@ class ConnectionManager:
                 self.worker_connections.remove(connection)
                 print("Worker connection removed: ", len(self.worker_connections))
         
-        await self._broadcast()
+        await self.broadcast(content=ClientContent(worker_num=len(self.worker_connections)))

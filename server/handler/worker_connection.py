@@ -81,7 +81,7 @@ class WorkerConnection:
         except WebSocketDisconnect:
             logging.info("WebSocket disconnected")
         except Exception as e:
-            logging.exception("Unexpected error in websocket listener")
+            logging.error("Unexpected error in websocket listener")
         finally:
             logging.info("Worker disconnected!")
             await self.connection_manager.remove_worker_connection(connection=self)
