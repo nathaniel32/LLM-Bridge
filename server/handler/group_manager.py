@@ -17,7 +17,7 @@ class GroupManager:
         self.chat_context = ChatContext()
 
     def reset_state(self):
-        self.chat_context.finish_interaction()
+        self.chat_context.reset_active_interaction()
         self.worker_connection = None
 
     async def add_client(self, client_connection):

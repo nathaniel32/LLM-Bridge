@@ -18,7 +18,7 @@ class ChatContext(BaseModel):
         self.active_interaction = Interaction(prompt=prompt)
         self.interaction_history.append(self.active_interaction)
 
-    def finish_interaction(self):
+    def reset_active_interaction(self):
         self.active_interaction = None
 
     def edit_interaction(self, interaction_id, prompt):
