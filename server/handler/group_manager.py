@@ -63,13 +63,18 @@ class GroupManager:
 
     async def start_job(self):
         try:
+            await self.update_interaction(status=InteractionStatus.IN_PROGRESS)
+
             await self.send(message=MessageModel(text="Starting process..."))
             await self.worker_connection.send_job(self)
             
             await self.send(message=MessageModel(text="Process completed!"))
+            await self.update_interaction(status=InteractionStatus.COMPLETED)
         except AbortException as e:
+            await self.update_interaction(status=InteractionStatus.ABORTED)
             await self.send(message=MessageModel(text=str(e), status=StatusType.WARNING))
         except Exception as e:
+            await self.update_interaction(status=InteractionStatus.FAILED)
             await self.send(message=MessageModel(text=str(e), status=StatusType.ERROR))
         finally:
             self.reset_state()
@@ -85,4 +90,4 @@ class GroupManager:
 
     async def delete_interaction(self, interaction_id):
         interaction = self.chat_context.delete_interaction(interaction_id=interaction_id)
-        await self.update_interaction(interaction=interaction)
+        await self.update_interaction(interaction=interaction, status=InteractionStatus.DELETED)

@@ -42,8 +42,6 @@ class ChatContext(BaseModel):
 
         self.interaction_history.remove(interaction)
         
-        interaction.status = InteractionStatus.DELETED
-
         return interaction
     
     def get_chat_message(self):

@@ -11,6 +11,7 @@ class InteractionStatus(str, Enum):
     CREATED = "created"
     QUEUED = "queued"
     IN_PROGRESS = "in_progress"
+    COMPLETED = "completed"
     FAILED = "failed"
     ABORTED = "aborted"
     DELETED = "deleted"
