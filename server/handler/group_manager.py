@@ -21,7 +21,7 @@ class GroupManager:
         self.worker_connection = None
 
     async def add_client(self, client_connection:"ClientConnection"):
-        if client_connection.group_manager is not None: client_connection.group_manager.remove_client(client_connection) # leave prev group
+        if client_connection.group_manager is not None: await client_connection.group_manager.remove_client(client_connection) # leave prev group
 
         self.client_connections.append(client_connection)
         client_connection.group_manager = self
