@@ -50,7 +50,7 @@ class ConnectionManager:
                     if worker_connection.job_event is None:
                         group_manager = self.waiting_groups.pop(0)
                         group_manager.worker_connection = worker_connection
-                        asyncio.create_task(group_manager.start_process())
+                        asyncio.create_task(group_manager.start_job())
                         await self._notify_queue_position(removed_group=group_manager)
                         return
                 print(f"No WORKER FREE | waiting list : {len(self.waiting_groups)}")

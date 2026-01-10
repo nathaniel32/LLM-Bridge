@@ -50,7 +50,7 @@ class GroupManager:
         self.chat_context.edit_interaction(interaction_id, prompt)
         await self.register_job()
 
-    async def start_process(self):
+    async def start_job(self):
         try:
             self.job_status = JobStatus.IN_PROGRESS
             await self.send(message=MessageModel(text="Starting process..."), content=ClientContent(job_status=self.job_status))
@@ -67,7 +67,7 @@ class GroupManager:
         finally:
             self.reset_state()
 
-    async def abort_process(self):
+    async def abort_interaction(self):
         if self.job_status in [JobStatus.IDLE, JobStatus.ABORTED, JobStatus.FAILED]:
             await self.send(message=MessageModel(text="No job is currently running", status=StatusType.WARNING))
             return
@@ -96,7 +96,7 @@ class GroupManager:
                             case ClientServerActionType.CREATE_INTERACTION:
                                 await self.create_interaction(prompt=response_model.content.input_text)
                             case ClientServerActionType.ABORT_INTERACTION:
-                                await self.abort_process()
+                                await self.abort_interaction()
                             case ClientServerActionType.DELETE_INTERACTION:
                                 await self.delete_interaction(interaction_id=response_model.content.input_id)
                             case ClientServerActionType.EDIT_INTERACTION:
