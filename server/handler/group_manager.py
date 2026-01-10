@@ -25,8 +25,10 @@ class GroupManager:
 
         await ws_response(websockets=connections, action=action, message=message, content=content)
 
-    async def update_active_interaction(self):
-        await self.send(content=ClientContent(interaction=self.chat_context.active_interaction))
+    async def update_active_interaction(self, interaction=None):
+        if interaction is None:
+            interaction = self.chat_context.active_interaction
+        await self.send(content=ClientContent(interaction=interaction))
 
     async def register_job(self):
         await self.update_active_interaction()
@@ -66,6 +68,8 @@ class GroupManager:
         
         self.abort = True
         await self.send(message=MessageModel(text="trying to abort request...", status=StatusType.WARNING))
+        interaction = self.chat_context.remove_interaction(interaction_id=self.chat_context.active_interaction.id)
+        await self.update_active_interaction(interaction=interaction)
         await self.connection_manager.remove_from_queue(self)
         if self.worker_connection:
             await self.worker_connection.abort_job()
