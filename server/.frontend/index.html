@@ -259,8 +259,7 @@
 
                 <!-- Groups Info Section -->
                 <div v-if="groupsInfos && groupsInfos.length > 0" class="groups-section">
-                    <div class="groups-header">📁 Groups</div>
-                    <div v-for="group in groupsInfos" :key="group.id" class="group-item">
+                    <div v-for="group in groupsInfos" :key="group.id" class="group-item" :style="joinedGroupId === group.id ? 'background-color: #e3f2fd' : ''">
                         <div class="group-info">
                             <div class="group-name">{{ group.name }}</div>
                             <div class="group-id">ID: {{ group.id }}</div>
