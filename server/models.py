@@ -10,7 +10,7 @@ class ChatContext(BaseModel):
     system: Optional[str] = "You are a helpful assistant."
     interaction_history: List[Interaction] = []
     active_interaction: Optional[Interaction] = None
-    title_interaction: Interaction = Interaction(prompt="Generate a concise title (1-2 words) summarizing the conversation.")
+    title_interaction: Interaction = Interaction(prompt="Generate a 1-4 words title summarizing the conversation. Do not include punctuation or quotes!")
 
     def close_active_interaction(self):
         self.active_interaction = None
