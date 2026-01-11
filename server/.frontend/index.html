@@ -659,25 +659,27 @@
                     // Update status properties
                     const statusProps = [
                         'client_num', 'queue_length', 
-                        'worker_num', 'group_num', 'groups_infos', 'joined_group_id'
+                        'worker_num', 'group_num', 'groups_infos', 'joined_group_infos'
                     ];
 
                     statusProps.forEach(prop => {
-                        if (content[prop] !== undefined && content[prop] !== null) {
+                        if (content[prop] !== null) {
                             const camelProp = prop.replace(/_([a-z])/g, (g) => g[1].toUpperCase());
                             this[camelProp] = content[prop];
                         }
                     });
+                    
 
+                    //############################################################################################################ TODO
                     // Update URL with group ID
-                    if (content.joined_group_id !== undefined) {
-                        this.updateURLWithGroupId(content.joined_group_id);
+                    if (content.joined_group_infos !== null) {
+                        this.updateURLWithGroupId(content.joined_group_infos.id);
                     }
 
                     // Clear interactions if left group
-                    if (content.joined_group_id === "") {
+                    /* if (content.joined_group_infos.id === "") {
                         this.interactions = [];
-                    }
+                    } */
 
                     // Handle interaction updates
                     if (content.interaction) {
