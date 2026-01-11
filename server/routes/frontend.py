@@ -40,7 +40,7 @@ class Frontend:
     async def root(self, request: Request):
         token = request.cookies.get("access_token")
         try:
-            access_token_validator(token)
+            #access_token_validator(token)
             return FileResponse(os.path.join(BASE_DIR, ".frontend", "index.html"))
         except TokenError as e:
             return FileResponse(os.path.join(BASE_DIR, ".frontend", "auth.html"), status_code=status.HTTP_401_UNAUTHORIZED)
