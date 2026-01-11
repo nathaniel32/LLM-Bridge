@@ -3,66 +3,10 @@ from enum import Enum
 from pydantic import BaseModel, Field
 from uuid import uuid4
 
-class GroupStatus(str, Enum):
-    IDLE = "idle"
-    IN_PROGRESS = "in_progress"
-    DELETED = "deleted"
-
-class InteractionStatus(str, Enum):
-    CREATED = "created"
-    QUEUED = "queued"
-    IN_PROGRESS = "in_progress"
-    COMPLETED = "completed"
-    FAILED = "failed"
-    ABORTED = "aborted"
-    DELETED = "deleted"
-
-class StatusType(str, Enum):
-    INFO = "info"
-    WARNING = "warning"
-    ERROR = "error"
-    SUCCESS = "success"
-
-#############################################################################################
-
 class AbortException(Exception):
     pass
 
-class Interaction(BaseModel):
-    id: str = Field(default_factory=lambda: uuid4().hex)
-    status: InteractionStatus = InteractionStatus.CREATED
-    prompt: str
-    response: str = ""
-
-    def add_response_chunk(self, chunk):
-        self.response += chunk
-        return self.response
-
-class GroupInfos(BaseModel):
-    id: str
-    name: str
-    queue_position: int = 0
-    status: GroupStatus = GroupStatus.IDLE
-
-#############################################################################################
-
-class ResponseStreamContent(BaseModel):
-    response: str
-
-class InputContent(BaseModel):
-    input_id: Optional[str] = None
-    input_text: Optional[str] = None
-
-class ClientContent(BaseModel):
-    joined_group_infos: Optional[GroupInfos] = None
-    interaction: Optional[Interaction] = None
-    client_num: Optional[int] = None
-    worker_num: Optional[int] = None
-    group_num: Optional[int] = None
-    groups_infos: Optional[List[GroupInfos]] = None
-    queue_length: Optional[int] = None
-
-#############################################################################################
+###################################################
 
 # action to control server from client
 class ClientServerActionType(str, Enum): # client - server
@@ -91,7 +35,65 @@ class WorkerServerActionType(str, Enum): # worker - server
     ABORTED = "aborted"
     ERROR = "error"
 
-#############################################################################################
+###################################################
+
+class GroupStatus(str, Enum):
+    IDLE = "idle"
+    IN_PROGRESS = "in_progress"
+    DELETED = "deleted"
+
+class InteractionStatus(str, Enum):
+    CREATED = "created"
+    QUEUED = "queued"
+    IN_PROGRESS = "in_progress"
+    COMPLETED = "completed"
+    FAILED = "failed"
+    ABORTED = "aborted"
+    DELETED = "deleted"
+
+class StatusType(str, Enum):
+    INFO = "info"
+    WARNING = "warning"
+    ERROR = "error"
+    SUCCESS = "success"
+
+###################################################
+
+class Interaction(BaseModel):
+    id: str = Field(default_factory=lambda: uuid4().hex)
+    status: InteractionStatus = InteractionStatus.CREATED
+    prompt: str
+    response: str = ""
+
+    def add_response_chunk(self, chunk):
+        self.response += chunk
+        return self.response
+
+class GroupInfos(BaseModel):
+    id: str
+    name: str
+    queue_position: int = 0
+    status: GroupStatus = GroupStatus.IDLE
+
+###################################################
+
+class ResponseStreamContent(BaseModel):
+    response: str
+
+class InputContent(BaseModel):
+    input_id: Optional[str] = None
+    input_text: Optional[str] = None
+
+class ClientContent(BaseModel):
+    joined_group_infos: Optional[GroupInfos] = None
+    interaction: Optional[Interaction] = None
+    client_num: Optional[int] = None
+    worker_num: Optional[int] = None
+    group_num: Optional[int] = None
+    groups_infos: Optional[List[GroupInfos]] = None
+    queue_length: Optional[int] = None
+
+###################################################
 
 class MessageModel(BaseModel):
     text: str
