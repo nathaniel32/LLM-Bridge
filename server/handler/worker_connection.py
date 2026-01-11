@@ -28,32 +28,23 @@ class WorkerConnection(BaseConnection):
             await self.send(action=ServerWorkerActionType.ABORT_INTERACTION)
             await self.group_manager.send(message=MessageModel(text="Job abort request sended to Worker"))
 
-    async def send_job(self, group_manager:GroupManager):
-        if self.job_event is None:
-            try:
-                self.job_event = asyncio.Event()
-                self.group_manager = group_manager
-                await self.group_manager.send(message=MessageModel(text="Sending Job to Worker..."))
-                await self.send(action=ServerWorkerActionType.CREATE_INTERACTION, content=InputContent(input_text=group_manager.chat_context.get_chat_message()))
-                await self.job_event.wait()
+    async def send_job(self, group_manager:GroupManager, input_text):
+        try:
+            self.job_event = asyncio.Event()
+            self.group_manager = group_manager
 
-                if self.worker_unsuccess_action == WorkerServerActionType.ERROR:
-                    raise Exception(self.worker_unsuccess_action)
-                if self.worker_unsuccess_action == WorkerServerActionType.ABORTED:
-                    raise AbortException(self.worker_unsuccess_action)
+            await self.group_manager.send(message=MessageModel(text="Sending Job to Worker..."))
+            await self.send(action=ServerWorkerActionType.CREATE_INTERACTION, content=InputContent(input_text=input_text))
+            await self.job_event.wait()
 
-                # if len(group_manager.chat_context.interaction_history) == 1:
-                self.job_event = asyncio.Event()
-                self.group_manager = group_manager
-                await self.group_manager.send(message=MessageModel(text="Sending Job to Worker..."))
-                await self.send(action=ServerWorkerActionType.CREATE_INTERACTION, content=InputContent(input_text=group_manager.chat_context.get_title_generation_message()))
-                await self.job_event.wait()
-            except AbortException as e:
-                raise AbortException(f"Abort in Worker: {e}") from e
-            except Exception as e:
-                raise Exception(f"Error in Worker: {e}") from e
-        else:
-            raise Exception("Worker busy, please try again later!")
+            if self.worker_unsuccess_action == WorkerServerActionType.ERROR:
+                raise Exception(self.worker_unsuccess_action)
+            if self.worker_unsuccess_action == WorkerServerActionType.ABORTED:
+                raise AbortException(self.worker_unsuccess_action)
+        except AbortException as e:
+            raise AbortException(f"Abort in Worker: {e}") from e
+        except Exception as e:
+            raise Exception(f"Error in Worker: {e}") from e
         
     async def setup_connection(self):
         await self.reset_state()

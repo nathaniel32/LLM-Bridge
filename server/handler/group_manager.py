@@ -102,8 +102,9 @@ class GroupManager:
             await self.update_interaction(status=InteractionStatus.PROCESSING)
 
             await self.send(message=MessageModel(text="Starting process..."))
-            await self.worker_connection.send_job(self)
-            
+            await self.worker_connection.send_job(self, input_text=self.chat_context.get_chat_message())
+            await self.worker_connection.send_job(self, input_text=self.chat_context.get_title_generation_message())
+
             await self.send(message=MessageModel(text="Process completed!"))
             await self.update_interaction(status=InteractionStatus.COMPLETED)
         except AbortException as e:
