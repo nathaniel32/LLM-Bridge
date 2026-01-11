@@ -1,6 +1,6 @@
 from pydantic import BaseModel
 from typing import List, Optional
-from common.models import Interaction, InteractionStatus
+from common.models import Interaction
 import json
 
 class RequestError(Exception):
