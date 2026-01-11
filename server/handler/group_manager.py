@@ -33,7 +33,8 @@ class GroupManager:
     async def remove_client(self, client_connection:"ClientConnection"):
         self.client_connections.remove(client_connection)
         client_connection.group_manager = None
-        await client_connection.send(message=MessageModel(text=f"Leave from {self.group_infos.credential.id}", status=StatusType.WARNING), content=ClientContent(joined_group_infos=GroupInfos(credential=GroupCredential(id="", name="")))) # reset joined_group_infos
+        empty_group_infos = GroupInfos(credential=GroupCredential(id="", name=""))
+        await client_connection.send(message=MessageModel(text=f"Leave from {self.group_infos.credential.id}", status=StatusType.WARNING), content=ClientContent(joined_group_infos=empty_group_infos)) # reset joined_group_infos
 
     async def delete_group(self):
         await self.connection_manager.remove_group_manager(self)
