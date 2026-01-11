@@ -63,17 +63,16 @@ class GroupManager:
         await self.send(content=ClientContent(joined_group_infos=self.group_infos), client_connections=client_connections)
 
     async def register_job(self):
+        await self.update_group_infos(status=GroupStatus.PROCESSING)
         await self.update_interaction(status=InteractionStatus.QUEUED)
         await self.connection_manager.enqueue_job(group_manager=self)
         await self.send(message=MessageModel(text="register job"))
 
     async def create_interaction(self, prompt):
-        await self.update_group_infos(status=GroupStatus.PROCESSING)
         self.chat_context.create_interaction(prompt)
         await self.register_job()
 
     async def edit_interaction(self, prompt, interaction_id):
-        await self.update_group_infos(status=GroupStatus.PROCESSING)
         self.chat_context.edit_interaction(interaction_id, prompt)
         await self.register_job()
         
