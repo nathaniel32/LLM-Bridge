@@ -6,7 +6,6 @@ from server.handler.worker_connection import WorkerConnection, WorkerTaskManager
 
 if TYPE_CHECKING:
     from server.handler.connection_manager import ConnectionManager
-    
     from server.handler.client_connection import ClientConnection
 
 class GroupManager:
