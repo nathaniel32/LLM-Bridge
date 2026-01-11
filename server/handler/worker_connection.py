@@ -35,14 +35,18 @@ class WorkerConnection(BaseConnection):
                 await self.group_manager.send(message=MessageModel(text="Sending Job to Worker..."))
                 await self.send(action=ServerWorkerActionType.CREATE_INTERACTION, content=InputContent(input_text=group_manager.chat_context.get_chat_message()))
                 await self.job_event.wait()
+
+                # if len(group_manager.chat_context.interaction_history) == 1:
+                self.job_event = asyncio.Event()
+                self.group_manager = group_manager
+                await self.group_manager.send(message=MessageModel(text="Sending Job to Worker..."))
+                await self.send(action=ServerWorkerActionType.CREATE_INTERACTION, content=InputContent(input_text=group_manager.chat_context.get_title_generation_message()))
+                await self.job_event.wait()
+
                 if self.worker_unsuccess_action == WorkerServerActionType.ERROR:
                     raise Exception(self.worker_unsuccess_action)
                 if self.worker_unsuccess_action == WorkerServerActionType.ABORTED:
                     raise AbortException(self.worker_unsuccess_action)
-                
-                if len(group_manager.chat_context.interaction_history) == 1:
-                    title_generation_message = self.group_manager.chat_context.get_title_generation_message()
-                    print(title_generation_message)
             except AbortException as e:
                 raise AbortException(f"Abort in Worker: {e}") from e
             except Exception as e:
@@ -70,11 +74,12 @@ class WorkerConnection(BaseConnection):
         match response_model.action:
             case WorkerServerActionType.STREAM_RESPONSE:
                 assert isinstance(response_model.content, ResponseStreamContent)
-                self.group_manager.chat_context.active_interaction.add_response_chunk(response_model.content.response)
                 if self.group_manager.chat_context.interaction_type == InteractionType.CHAT:
+                    self.group_manager.chat_context.active_interaction.add_response_chunk(response_model.content.response)
                     await self.group_manager.update_interaction() # stream
                 elif self.group_manager.chat_context.interaction_type == InteractionType.TITLE:
-                    print(response_model.content.response)
+                    self.group_manager.chat_context.title_interaction.add_response_chunk(response_model.content.response)
+                    await self.group_manager.update_group_infos(update_credential=True)
             case WorkerServerActionType.ABORTED:
                 self.worker_unsuccess_action = response_model.action
             case WorkerServerActionType.ERROR:

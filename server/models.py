@@ -15,6 +15,7 @@ class ChatContext(BaseModel):
     system: Optional[str] = "You are a helpful assistant."
     interaction_history: List[Interaction] = []
     active_interaction: Optional[Interaction] = None
+    title_interaction: Interaction = Interaction(prompt="Generate a concise title (1-2 words) summarizing the conversation.")
     interaction_type: InteractionType = InteractionType.CHAT
 
     def close_active_interaction(self):
@@ -68,15 +69,12 @@ class ChatContext(BaseModel):
         if self.active_interaction is None:
             raise RequestError("No active interaction to generate title from")
         
-        system_prompt = "Generate a concise title (3-5 words) summarizing the conversation."
-        
         messages = [
-            {"role": "system", "content": system_prompt},
-            {"role": "user", "content": self.active_interaction.prompt}
+            {"role": "system", "content": self.active_interaction.response},
+            {"role": "user", "content": self.title_interaction.prompt}
         ]
         
-        #if self.active_interaction.response:
-        #    messages.append({"role": "assistant", "content": self.active_interaction.response})
+        self.title_interaction.response = ""
         
         self.interaction_type = InteractionType.TITLE
         return json.dumps(messages)

@@ -59,8 +59,13 @@ class GroupManager:
             
             await self.send(content=ClientContent(interaction=interaction), client_connections=client_connections)
 
-    async def update_group_infos(self, status:GroupStatus, client_connections=None):
-        self.group_infos.status = status
+    async def update_group_infos(self, status:Optional[GroupStatus]=None, client_connections=None, update_credential=False):
+        if status is not None:
+            self.group_infos.status = status
+
+        if update_credential:
+            self.group_infos.credential.title = self.chat_context.title_interaction.response
+            await self.connection_manager.broadcast(content=ClientContent(groups_credential=self.connection_manager._get_groups_credential()))
         await self.send(content=ClientContent(joined_group_infos=self.group_infos), client_connections=client_connections)
 
     async def register_job(self):
