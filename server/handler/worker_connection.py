@@ -39,14 +39,16 @@ class WorkerConnection(BaseConnection):
                     raise Exception(self.worker_unsuccess_action)
                 if self.worker_unsuccess_action == WorkerServerActionType.ABORTED:
                     raise AbortException(self.worker_unsuccess_action)
+                
+                #TODO update title if length interaction = 1
+                print("INTER LEN: ", len(group_manager.chat_context.interaction_history))
+                print("INTER PROMPT: ", group_manager.chat_context.active_interaction.prompt)
+                print(self.group_manager.chat_context.get_title_generation_message())
             except AbortException as e:
                 raise AbortException(f"Abort in Worker: {e}") from e
             except Exception as e:
                 raise Exception(f"Error in Worker: {e}") from e
             finally:
-                #TODO update title if length interaction = 1
-                print("INTER LEN: ", len(group_manager.chat_context.interaction_history))
-                print("INTER PROMPT: ", group_manager.chat_context.active_interaction.prompt)
                 self.reset_state()
                 await self.connection_manager.dequeue_job()
         else:
