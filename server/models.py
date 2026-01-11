@@ -1,7 +1,6 @@
 from pydantic import BaseModel
 from typing import List, Optional
 from common.models import Interaction
-from enum import Enum
 import json
 
 class RequestError(Exception):
