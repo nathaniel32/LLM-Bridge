@@ -3,7 +3,7 @@ from fastapi import WebSocket
 from server.handler.group_manager import GroupManager
 from server.handler.base_connection import BaseConnection
 from server.models import RequestError
-from common.models import ResponseModel, ClientServerActionType, ClientContent, ServerClientActionType, MessageModel, StatusType
+from common.models import ResponseModel, ClientServerActionType, ClientContent, ServerClientActionType, MessageModel, StatusType, GroupInfos, GroupCredential
 import asyncio
 
 if TYPE_CHECKING:
@@ -27,7 +27,9 @@ class ClientConnection(BaseConnection):
 
     async def setup_connection(self):
         self.heartbeat = asyncio.create_task(self.heartbeat_task())
+        empty_group_infos = GroupInfos(credential=GroupCredential(id="", name=""))
         client_content = ClientContent(
+            joined_group_infos = empty_group_infos,
             client_num = len(self.connection_manager.client_connections),
             worker_num = len(self.connection_manager.worker_connections),
             group_num = len(self.connection_manager.group_managers),
