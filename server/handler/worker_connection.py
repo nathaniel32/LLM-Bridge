@@ -41,8 +41,8 @@ class WorkerConnection(BaseConnection):
                     raise AbortException(self.worker_unsuccess_action)
                 
                 if len(group_manager.chat_context.interaction_history) == 1:
-                    print("INTER PROMPT: ", group_manager.chat_context.active_interaction.prompt)
-                    print(self.group_manager.chat_context.get_title_generation_message())
+                    title_generation_message = self.group_manager.chat_context.get_title_generation_message()
+                    print(title_generation_message)
             except AbortException as e:
                 raise AbortException(f"Abort in Worker: {e}") from e
             except Exception as e:
