@@ -20,7 +20,6 @@ class WorkerConnection(BaseConnection):
     async def reset_state(self):
         self.job_event = None
         self.group_manager = None
-        self.worker_unsuccess_action = None
         await self.connection_manager.dequeue_job()
 
     async def send_abort_request(self):
@@ -32,6 +31,7 @@ class WorkerConnection(BaseConnection):
         try:
             self.job_event = asyncio.Event()
             self.group_manager = group_manager
+            self.worker_unsuccess_action = None
 
             await self.group_manager.send(message=MessageModel(text="Sending Job to Worker..."))
             await self.send(action=ServerWorkerActionType.CREATE_INTERACTION, content=InputContent(input_text=input_text))
