@@ -72,7 +72,7 @@ class GroupManager:
         
     async def start_job(self):
         try:
-            await self.update_interaction(status=InteractionStatus.IN_PROGRESS)
+            await self.update_interaction(status=InteractionStatus.PROCESSING)
 
             await self.send(message=MessageModel(text="Starting process..."))
             await self.worker_connection.send_job(self)

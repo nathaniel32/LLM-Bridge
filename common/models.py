@@ -39,13 +39,12 @@ class WorkerServerActionType(str, Enum): # worker - server
 
 class GroupStatus(str, Enum):
     IDLE = "idle"
-    IN_PROGRESS = "in_progress"
-    DELETED = "deleted"
+    PROCESSING = "processing"
 
 class InteractionStatus(str, Enum):
     CREATED = "created"
     QUEUED = "queued"
-    IN_PROGRESS = "in_progress"
+    PROCESSING = "processing"
     COMPLETED = "completed"
     FAILED = "failed"
     ABORTED = "aborted"
