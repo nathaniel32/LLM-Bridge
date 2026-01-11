@@ -2,10 +2,11 @@ from typing import TYPE_CHECKING, List, Optional
 from common.models import StatusType, ClientContent, MessageModel, AbortException, GroupInfos, InteractionStatus, GroupCredential, GroupStatus
 from server.models import ChatContext
 from uuid import uuid4
+from server.handler.worker_connection import WorkerConnection, WorkerTaskManager
 
 if TYPE_CHECKING:
     from server.handler.connection_manager import ConnectionManager
-    from server.handler.worker_connection import WorkerConnection
+    
     from server.handler.client_connection import ClientConnection
 
 class GroupManager:
@@ -13,7 +14,7 @@ class GroupManager:
         self.group_infos = GroupInfos(credential=GroupCredential(id=uuid4().hex, title="New Chat"))
         self.connection_manager = connection_manager
         self.client_connections: List[ClientConnection] = []
-        self.worker_connection: Optional["WorkerConnection"] = None
+        self.worker_connection: Optional[WorkerConnection] = None
         self.chat_context = ChatContext()
 
     async def reset_state(self):
@@ -112,8 +113,12 @@ class GroupManager:
             await self.update_interaction(status=InteractionStatus.PROCESSING)
 
             await self.send(message=MessageModel(text="Starting process..."))
-            await self.worker_connection.send_job(self, input_text=self.chat_context.get_chat_message())
-            await self.worker_connection.send_job(self, input_text=self.chat_context.get_title_generation_message())
+            
+            worker_task = WorkerTaskManager(input_text=self.chat_context.get_chat_message(), send_callback=self.send, stream_response_callback=self.job_callback)
+            await self.worker_connection.send_job(worker_task=worker_task)
+
+            worker_task = WorkerTaskManager(input_text=self.chat_context.get_title_generation_message(), send_callback=self.send, stream_response_callback=self.job_callback)
+            await self.worker_connection.send_job(worker_task=worker_task)
 
             await self.send(message=MessageModel(text="Process completed!"))
             await self.update_interaction(status=InteractionStatus.COMPLETED)

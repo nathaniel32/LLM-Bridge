@@ -1,10 +1,8 @@
 from typing import TYPE_CHECKING, Optional, Protocol, Any
 from fastapi import WebSocket
 from common.models import WorkerServerActionType, ServerWorkerActionType, InputContent, ResponseModel, MessageModel, ResponseStreamContent, AbortException, StatusType
-from server.handler.group_manager import GroupManager
 import asyncio
 import logging
-from server.models import InteractionType
 from server.handler.base_connection import BaseConnection
 if TYPE_CHECKING:
     from server.handler.connection_manager import ConnectionManager
@@ -62,8 +60,8 @@ class WorkerConnection(BaseConnection):
             await self.send(action=ServerWorkerActionType.ABORT_INTERACTION)
             await self.active_task.send_callback(message=MessageModel(text="Job abort request sended to Worker"))
 
-    async def send_job(self, group_manager:GroupManager, input_text):
-        self.active_task = WorkerTaskManager(input_text=input_text, send_callback=group_manager.send, stream_response_callback=group_manager.job_callback)
+    async def send_job(self, worker_task:WorkerTaskManager):
+        self.active_task = worker_task
         try:
             await self.active_task.send_callback(message=MessageModel(text="Sending Job to Worker..."))
             await self.send(action=self.active_task.action, content=self.active_task.content)
