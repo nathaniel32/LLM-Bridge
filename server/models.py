@@ -55,3 +55,19 @@ class ChatContext(BaseModel):
             else:
                 break
         return json.dumps(messages)
+    
+    def get_title_generation_message(self):
+        if self.active_interaction is None:
+            raise RequestError("No active interaction to generate title from")
+        
+        system_prompt = "Generate a concise title (3-5 words) summarizing the conversation."
+        
+        messages = [
+            {"role": "system", "content": system_prompt},
+            {"role": "user", "content": self.active_interaction.prompt}
+        ]
+        
+        if self.active_interaction.response:
+            messages.append({"role": "assistant", "content": self.active_interaction.response})
+        
+        return json.dumps(messages)
