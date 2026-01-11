@@ -19,12 +19,14 @@ class SendCallback(Protocol):
         ...
 
 class WorkerTaskManager:
-    def __init__(self, group_manager, send_callback: SendCallback, stream_response_callback=None):
+    def __init__(self, input_text, group_manager, send_callback: SendCallback, stream_response_callback=None):
         self.job_event = asyncio.Event()
         self.unsuccess_action: Optional[WorkerServerActionType] = None
         self.group_manager: GroupManager = group_manager
         self.send_callback = send_callback
         self.stream_response_callback = stream_response_callback
+        self.action = ServerWorkerActionType.CREATE_INTERACTION
+        self.content = InputContent(input_text=input_text)
 
     async def event_handler(self, response_model:ResponseModel):
         await self.send_callback(message=response_model.message)
@@ -60,10 +62,10 @@ class WorkerConnection(BaseConnection):
             await self.active_task.send_callback(message=MessageModel(text="Job abort request sended to Worker"))
 
     async def send_job(self, group_manager:GroupManager, input_text):
-        self.active_task = WorkerTaskManager(group_manager=group_manager, send_callback=group_manager.send)
+        self.active_task = WorkerTaskManager(input_text=input_text, group_manager=group_manager, send_callback=group_manager.send)
         try:
             await self.active_task.send_callback(message=MessageModel(text="Sending Job to Worker..."))
-            await self.send(action=ServerWorkerActionType.CREATE_INTERACTION, content=InputContent(input_text=input_text))
+            await self.send(action=self.active_task.action, content=self.active_task.content)
             await self.active_task.job_event.wait()
 
             if self.active_task.unsuccess_action == WorkerServerActionType.ERROR:
