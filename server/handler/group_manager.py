@@ -1,5 +1,5 @@
 from typing import TYPE_CHECKING, List, Optional
-from common.models import StatusType, ClientContent, MessageModel, AbortException, GroupInfos, InteractionStatus, GroupCredential
+from common.models import StatusType, ClientContent, MessageModel, AbortException, GroupInfos, InteractionStatus, GroupCredential, GroupStatus
 from server.models import ChatContext
 from uuid import uuid4
 
@@ -16,7 +16,8 @@ class GroupManager:
         self.worker_connection: Optional["WorkerConnection"] = None
         self.chat_context = ChatContext()
 
-    def reset_state(self):
+    async def reset_state(self):
+        await self.update_group_infos(status=GroupStatus.IDLE)
         self.chat_context.reset_active_interaction()
         self.worker_connection = None
 
@@ -57,16 +58,22 @@ class GroupManager:
             
             await self.send(content=ClientContent(interaction=interaction), client_connections=client_connections)
 
+    async def update_group_infos(self, status:GroupStatus, client_connections=None):
+        self.group_infos.status = status
+        await self.send(content=ClientContent(joined_group_infos=self.group_infos), client_connections=client_connections)
+
     async def register_job(self):
         await self.update_interaction(status=InteractionStatus.QUEUED)
         await self.connection_manager.enqueue_job(group_manager=self)
         await self.send(message=MessageModel(text="register job"))
 
     async def create_interaction(self, prompt):
+        await self.update_group_infos(status=GroupStatus.PROCESSING)
         self.chat_context.create_interaction(prompt)
         await self.register_job()
 
     async def edit_interaction(self, prompt, interaction_id):
+        await self.update_group_infos(status=GroupStatus.PROCESSING)
         self.chat_context.edit_interaction(interaction_id, prompt)
         await self.register_job()
         
@@ -86,7 +93,7 @@ class GroupManager:
             await self.update_interaction(status=InteractionStatus.FAILED)
             await self.send(message=MessageModel(text=str(e), status=StatusType.ERROR))
         finally:
-            self.reset_state()
+            await self.reset_state()
 
     async def abort_interaction(self):
         await self.send(message=MessageModel(text="trying to abort request...", status=StatusType.WARNING))
@@ -97,7 +104,7 @@ class GroupManager:
         else:
             await self.update_interaction(status=InteractionStatus.ABORTED)
             await self.send(message=MessageModel(text="Aborted!!", status=StatusType.WARNING))
-            self.reset_state()
+            await self.reset_state()
 
     async def delete_interaction(self, interaction_id):
         interaction = self.chat_context.delete_interaction(interaction_id=interaction_id)
