@@ -4,7 +4,8 @@ from pydantic import BaseModel, Field
 from uuid import uuid4
 
 class GroupStatus(str, Enum):
-    ACTIVE = "active"
+    IDLE = "idle"
+    IN_PROGRESS = "in_progress"
     DELETED = "deleted"
 
 class InteractionStatus(str, Enum):
@@ -38,9 +39,10 @@ class Interaction(BaseModel):
         return self.response
 
 class GroupInfos(BaseModel):
-    status: GroupStatus = GroupStatus.ACTIVE
     id: str
     name: str
+    queue_position: int = 0
+    status: GroupStatus = GroupStatus.IDLE
 
 #############################################################################################
 
@@ -54,7 +56,6 @@ class InputContent(BaseModel):
 class ClientContent(BaseModel):
     joined_group_id: Optional[str] = None
     interaction: Optional[Interaction] = None
-    queue_position: Optional[int] = None
     client_num: Optional[int] = None
     worker_num: Optional[int] = None
     group_num: Optional[int] = None

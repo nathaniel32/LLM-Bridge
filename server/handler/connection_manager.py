@@ -36,12 +36,14 @@ class ConnectionManager:
             await client.send(message=message, content=content, action=action)
 
     async def _notify_queue_position(self, removed_group:Optional[GroupManager]=None):
-        for position, client_session in enumerate(self.waiting_groups):
+        for position, group in enumerate(self.waiting_groups):
             position += 1
-            await client_session.send(message=MessageModel(text=f"Your Waiting Position: {position} of {len(self.waiting_groups)}"), content=ClientContent(queue_position=position))
+            group.group_infos.queue_position = position
+            await group.send(message=MessageModel(text=f"Your Waiting Position: {position} of {len(self.waiting_groups)}"), content=ClientContent(groups_infos=group.group_infos))
 
         if removed_group is not None and removed_group not in self.waiting_groups:
-            await removed_group.send(content=ClientContent(queue_position=0))
+            removed_group.group_infos.queue_position = 0
+            await removed_group.send(content=ClientContent(groups_infos=removed_group.group_infos))
 
     async def remove_from_queue(self, group_manager: GroupManager):
         async with self._dispatch_lock:
