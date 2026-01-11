@@ -401,25 +401,8 @@
                 >
                     <div class="flex items-start justify-between">
                         <div class="flex-1 min-w-0 pr-2">
-                            <div class="flex items-center gap-2 mb-1">
-                                <h3 class="font-semibold text-sm text-gray-900 truncate">{{ group.name }}</h3>
-                                <span 
-                                    class="text-xs px-2 py-0.5 rounded-full font-medium uppercase flex-shrink-0"
-                                    :class="{
-                                        'bg-gray-100 text-gray-700': group.status === 'idle',
-                                        'bg-yellow-100 text-yellow-700': group.status === 'processing',
-                                        'bg-red-100 text-red-700': group.status === 'deleted'
-                                    }"
-                                >
-                                    {{ group.status }}
-                                </span>
-                            </div>
+                            <h3 class="font-semibold text-sm text-gray-900 truncate">{{ group.name }}</h3>
                             <p class="text-xs text-gray-500 font-mono truncate">{{ group.id }}</p>
-                            <div v-if="group.queue_position !== undefined && group.queue_position > 0" class="mt-1">
-                                <span class="text-xs text-orange-600 font-medium">
-                                    <i class="fas fa-clock mr-1"></i>Queue: {{ group.queue_position }}
-                                </span>
-                            </div>
                         </div>
                         
                         <!-- Dropdown Button -->
