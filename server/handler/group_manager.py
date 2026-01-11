@@ -87,7 +87,7 @@ class GroupManager:
         await self.connection_manager.remove_from_queue(self)
         
         if self.worker_connection:
-            await self.worker_connection.abort_interaction()
+            await self.worker_connection.send_abort_request()
         else:
             await self.update_interaction(status=InteractionStatus.ABORTED)
             await self.send(message=MessageModel(text="Aborted!!", status=StatusType.WARNING))

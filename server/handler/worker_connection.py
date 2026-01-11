@@ -17,12 +17,13 @@ class WorkerConnection(BaseConnection):
         self.group_manager: Optional[GroupManager] = None
         self.worker_unsuccess_action: Optional[WorkerServerActionType] = None
 
-    def reset_state(self):
+    async def reset_state(self):
         self.job_event = None
         self.group_manager = None
         self.worker_unsuccess_action = None
+        await self.connection_manager.dequeue_job()
 
-    async def abort_interaction(self):
+    async def send_abort_request(self):
         if self.job_event:
             await self.send(action=ServerWorkerActionType.ABORT_INTERACTION)
             await self.group_manager.send(message=MessageModel(text="Job abort request sended to Worker"))
@@ -52,14 +53,13 @@ class WorkerConnection(BaseConnection):
             except Exception as e:
                 raise Exception(f"Error in Worker: {e}") from e
             finally:
-                self.reset_state()
-                await self.connection_manager.dequeue_job()
+                await self.reset_state()
         else:
             raise Exception("Worker busy, please try again later!")
         
     async def setup_connection(self):
-        await self.connection_manager.dequeue_job()
-        
+        await self.reset_state()
+    
     async def cleanup_connection(self):
         logging.info("Worker disconnected!")
         await self.connection_manager.remove_worker_connection(connection=self)
