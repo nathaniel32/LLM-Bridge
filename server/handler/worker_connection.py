@@ -36,17 +36,17 @@ class WorkerConnection(BaseConnection):
                 await self.send(action=ServerWorkerActionType.CREATE_INTERACTION, content=InputContent(input_text=group_manager.chat_context.get_chat_message()))
                 await self.job_event.wait()
 
+                if self.worker_unsuccess_action == WorkerServerActionType.ERROR:
+                    raise Exception(self.worker_unsuccess_action)
+                if self.worker_unsuccess_action == WorkerServerActionType.ABORTED:
+                    raise AbortException(self.worker_unsuccess_action)
+
                 # if len(group_manager.chat_context.interaction_history) == 1:
                 self.job_event = asyncio.Event()
                 self.group_manager = group_manager
                 await self.group_manager.send(message=MessageModel(text="Sending Job to Worker..."))
                 await self.send(action=ServerWorkerActionType.CREATE_INTERACTION, content=InputContent(input_text=group_manager.chat_context.get_title_generation_message()))
                 await self.job_event.wait()
-
-                if self.worker_unsuccess_action == WorkerServerActionType.ERROR:
-                    raise Exception(self.worker_unsuccess_action)
-                if self.worker_unsuccess_action == WorkerServerActionType.ABORTED:
-                    raise AbortException(self.worker_unsuccess_action)
             except AbortException as e:
                 raise AbortException(f"Abort in Worker: {e}") from e
             except Exception as e:
