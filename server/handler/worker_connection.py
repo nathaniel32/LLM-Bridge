@@ -40,7 +40,7 @@ class WorkerConnection(BaseConnection):
                 if self.worker_unsuccess_action == WorkerServerActionType.ABORTED:
                     raise AbortException(self.worker_unsuccess_action)
                 
-                if group_manager.chat_context.interaction_history == 1:
+                if len(group_manager.chat_context.interaction_history) == 1:
                     print("INTER PROMPT: ", group_manager.chat_context.active_interaction.prompt)
                     print(self.group_manager.chat_context.get_title_generation_message())
             except AbortException as e:
