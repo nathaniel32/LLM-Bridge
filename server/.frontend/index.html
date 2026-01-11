@@ -201,6 +201,40 @@
                         <p class="text-sm text-gray-500">No groups yet</p>
                     </div>
                 </div>
+
+                <!-- Server Stats Footer -->
+                <div class="border-t border-gray-200 p-3 bg-gray-50">
+                    <div class="text-xs text-gray-600 space-y-2">
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center gap-2">
+                                <i class="fas fa-user text-green-600"></i>
+                                <span>Client</span>
+                            </div>
+                            <strong class="text-gray-900">{{ clientNum !== null ? '#' + clientNum : '-' }}</strong>
+                        </div>
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center gap-2">
+                                <i class="fas fa-cog text-indigo-600"></i>
+                                <span>Workers</span>
+                            </div>
+                            <strong class="text-gray-900">{{ workerNum !== null ? workerNum : '-' }}</strong>
+                        </div>
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center gap-2">
+                                <i class="fas fa-users text-pink-600"></i>
+                                <span>Total Groups</span>
+                            </div>
+                            <strong class="text-gray-900">{{ groupNum !== null ? groupNum : '-' }}</strong>
+                        </div>
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center gap-2">
+                                <i class="fas fa-list text-orange-600"></i>
+                                <span>Queue Length</span>
+                            </div>
+                            <strong class="text-gray-900">{{ queueLength !== null ? queueLength : '-' }}</strong>
+                        </div>
+                    </div>
+                </div>
             </aside>
 
             <!-- Chat Area -->
@@ -237,22 +271,6 @@
                                 }" class="mr-1"></i>
                                 Group {{ joinedGroupInfo.status }}
                             </span>
-                        </div>
-                        <div v-if="clientNum !== null" class="flex items-center gap-2">
-                            <i class="fas fa-user text-green-600"></i>
-                            <span>Client: <strong class="text-gray-900">#{{ clientNum }}</strong></span>
-                        </div>
-                        <div v-if="workerNum !== null" class="flex items-center gap-2">
-                            <i class="fas fa-cog text-indigo-600"></i>
-                            <span>Workers: <strong class="text-gray-900">{{ workerNum }}</strong></span>
-                        </div>
-                        <div v-if="groupNum !== null" class="flex items-center gap-2">
-                            <i class="fas fa-users text-pink-600"></i>
-                            <span>Total Groups: <strong class="text-gray-900">{{ groupNum }}</strong></span>
-                        </div>
-                        <div v-if="queueLength !== null" class="flex items-center gap-2">
-                            <i class="fas fa-list text-orange-600"></i>
-                            <span>Queue Length: <strong class="text-gray-900">{{ queueLength }}</strong></span>
                         </div>
                     </div>
                 </div>
