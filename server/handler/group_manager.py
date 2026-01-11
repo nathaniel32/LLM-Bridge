@@ -81,7 +81,22 @@ class GroupManager:
     async def edit_interaction(self, prompt, interaction_id):
         self.chat_context.edit_interaction(interaction_id, prompt)
         await self.register_job()
+    
+    async def abort_interaction(self):
+        await self.send(message=MessageModel(text="trying to abort request...", status=StatusType.WARNING))
+        await self.connection_manager.remove_from_queue(self)
         
+        if self.worker_connection:
+            await self.worker_connection.abort_interaction()
+        else:
+            await self.update_interaction(status=InteractionStatus.ABORTED)
+            await self.send(message=MessageModel(text="Aborted!!", status=StatusType.WARNING))
+            await self.reset_state()
+
+    async def delete_interaction(self, interaction_id):
+        interaction = self.chat_context.delete_interaction(interaction_id=interaction_id)
+        await self.update_interaction(interaction=interaction, status=InteractionStatus.DELETED)
+
     async def start_job(self):
         try:
             await self.update_interaction(status=InteractionStatus.PROCESSING)
@@ -99,18 +114,3 @@ class GroupManager:
             await self.send(message=MessageModel(text=str(e), status=StatusType.ERROR))
         finally:
             await self.reset_state()
-
-    async def abort_interaction(self):
-        await self.send(message=MessageModel(text="trying to abort request...", status=StatusType.WARNING))
-        await self.connection_manager.remove_from_queue(self)
-        
-        if self.worker_connection:
-            await self.worker_connection.abort_interaction()
-        else:
-            await self.update_interaction(status=InteractionStatus.ABORTED)
-            await self.send(message=MessageModel(text="Aborted!!", status=StatusType.WARNING))
-            await self.reset_state()
-
-    async def delete_interaction(self, interaction_id):
-        interaction = self.chat_context.delete_interaction(interaction_id=interaction_id)
-        await self.update_interaction(interaction=interaction, status=InteractionStatus.DELETED)
