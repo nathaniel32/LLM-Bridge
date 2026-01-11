@@ -52,8 +52,6 @@ class WorkerConnection(BaseConnection):
                 raise AbortException(f"Abort in Worker: {e}") from e
             except Exception as e:
                 raise Exception(f"Error in Worker: {e}") from e
-            finally:
-                await self.reset_state()
         else:
             raise Exception("Worker busy, please try again later!")
         

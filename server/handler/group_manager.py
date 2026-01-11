@@ -113,4 +113,5 @@ class GroupManager:
             await self.update_interaction(status=InteractionStatus.FAILED)
             await self.send(message=MessageModel(text=str(e), status=StatusType.ERROR))
         finally:
+            await self.worker_connection.reset_state()
             await self.reset_state()
