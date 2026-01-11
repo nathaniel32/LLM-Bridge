@@ -7,16 +7,11 @@ import json
 class RequestError(Exception):
     pass
 
-class InteractionType(str, Enum):
-    CHAT = "chat"
-    TITLE = "title"
-
 class ChatContext(BaseModel):
     system: Optional[str] = "You are a helpful assistant."
     interaction_history: List[Interaction] = []
     active_interaction: Optional[Interaction] = None
     title_interaction: Interaction = Interaction(prompt="Generate a concise title (1-2 words) summarizing the conversation.")
-    interaction_type: InteractionType = InteractionType.CHAT
 
     def close_active_interaction(self):
         self.active_interaction = None
@@ -62,7 +57,6 @@ class ChatContext(BaseModel):
             else:
                 break
 
-        self.interaction_type = InteractionType.CHAT
         return json.dumps(messages)
     
     def get_title_generation_message(self):
@@ -76,5 +70,4 @@ class ChatContext(BaseModel):
         
         self.title_interaction.response = ""
         
-        self.interaction_type = InteractionType.TITLE
         return json.dumps(messages)

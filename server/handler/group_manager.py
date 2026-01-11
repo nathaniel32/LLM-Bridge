@@ -1,5 +1,5 @@
 from typing import TYPE_CHECKING, List, Optional
-from common.models import StatusType, ClientContent, MessageModel, AbortException, GroupInfos, InteractionStatus, GroupCredential, GroupStatus
+from common.models import StatusType, ClientContent, MessageModel, AbortException, GroupInfos, InteractionStatus, GroupCredential, GroupStatus, ResponseModel
 from server.models import ChatContext
 from uuid import uuid4
 from server.handler.worker_connection import WorkerConnection, WorkerTaskManager
@@ -97,15 +97,13 @@ class GroupManager:
         interaction = self.chat_context.delete_interaction(interaction_id=interaction_id)
         await self.update_interaction(interaction=interaction, status=InteractionStatus.DELETED)
 
-    async def job_callback(self, response_model):
-        from server.models import InteractionType
+    async def stream_chat_handler(self, response_model:ResponseModel):
+        self.chat_context.active_interaction.add_response_chunk(response_model.content.response)
+        await self.update_interaction() # stream
 
-        if self.chat_context.interaction_type == InteractionType.CHAT:
-            self.chat_context.active_interaction.add_response_chunk(response_model.content.response)
-            await self.update_interaction() # stream
-        elif self.chat_context.interaction_type == InteractionType.TITLE:
-            self.chat_context.title_interaction.add_response_chunk(response_model.content.response)
-            await self.update_group_infos(update_credential=True)
+    async def stream_title_handler(self, response_model:ResponseModel):
+        self.chat_context.title_interaction.add_response_chunk(response_model.content.response)
+        await self.update_group_infos(update_credential=True) # stream
 
     async def start_job(self):
         try:
@@ -113,10 +111,10 @@ class GroupManager:
 
             await self.send(message=MessageModel(text="Starting process..."))
             
-            worker_task = WorkerTaskManager(input_text=self.chat_context.get_chat_message(), send_callback=self.send, stream_response_callback=self.job_callback)
+            worker_task = WorkerTaskManager(input_text=self.chat_context.get_chat_message(), send_callback=self.send, stream_response_callback=self.stream_chat_handler)
             await self.worker_connection.send_job(worker_task=worker_task)
 
-            worker_task = WorkerTaskManager(input_text=self.chat_context.get_title_generation_message(), send_callback=self.send, stream_response_callback=self.job_callback)
+            worker_task = WorkerTaskManager(input_text=self.chat_context.get_title_generation_message(), send_callback=self.send, stream_response_callback=self.stream_title_handler)
             await self.worker_connection.send_job(worker_task=worker_task)
 
             await self.send(message=MessageModel(text="Process completed!"))
