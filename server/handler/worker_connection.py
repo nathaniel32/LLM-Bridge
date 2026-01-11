@@ -4,7 +4,7 @@ from common.models import WorkerServerActionType, ServerWorkerActionType, InputC
 from server.handler.group_manager import GroupManager
 import asyncio
 import logging
-from server.models import RequestError
+from server.models import InteractionType
 from server.handler.base_connection import BaseConnection
 if TYPE_CHECKING:
     from server.handler.connection_manager import ConnectionManager
@@ -71,7 +71,10 @@ class WorkerConnection(BaseConnection):
             case WorkerServerActionType.STREAM_RESPONSE:
                 assert isinstance(response_model.content, ResponseStreamContent)
                 self.group_manager.chat_context.active_interaction.add_response_chunk(response_model.content.response)
-                await self.group_manager.update_interaction() # stream
+                if self.group_manager.chat_context.interaction_type == InteractionType.CHAT:
+                    await self.group_manager.update_interaction() # stream
+                elif self.group_manager.chat_context.interaction_type == InteractionType.TITLE:
+                    print(response_model.content.response)
             case WorkerServerActionType.ABORTED:
                 self.worker_unsuccess_action = response_model.action
             case WorkerServerActionType.ERROR:
