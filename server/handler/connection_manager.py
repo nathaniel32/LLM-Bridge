@@ -45,6 +45,8 @@ class ConnectionManager:
             removed_group.group_infos.queue_position = 0
             await removed_group.send(content=ClientContent(joined_group_infos=removed_group.group_infos))
 
+        await self.broadcast(content=ClientContent(queue_length=len(self.waiting_groups)))
+
     async def remove_from_queue(self, group_manager: GroupManager):
         async with self._dispatch_lock:
             if group_manager in self.waiting_groups:
