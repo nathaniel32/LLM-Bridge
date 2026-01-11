@@ -9,14 +9,26 @@ from server.handler.base_connection import BaseConnection
 if TYPE_CHECKING:
     from server.handler.connection_manager import ConnectionManager
 
+from typing import Protocol, Awaitable, Optional, Any
+
+class SendCallback(Protocol):
+    async def __call__(
+        self, 
+        message: Optional[Any] = None, 
+        content: Optional[Any] = None, 
+        action: Optional[Any] = None
+    ) -> None:
+        ...
+
 class WorkerTaskManager:
-    def __init__(self, group_manager):
+    def __init__(self, group_manager, send_callback: SendCallback):
         self.job_event = asyncio.Event()
         self.unsuccess_action: Optional[WorkerServerActionType] = None
         self.group_manager: GroupManager = group_manager
+        self.send = send_callback
 
     async def event_handler(self, response_model:ResponseModel):
-        await self.group_manager.send(message=response_model.message)
+        await self.send(message=response_model.message)
 
         match response_model.action:
             case WorkerServerActionType.STREAM_RESPONSE:
@@ -49,7 +61,7 @@ class WorkerConnection(BaseConnection):
             await self.active_task.group_manager.send(message=MessageModel(text="Job abort request sended to Worker"))
 
     async def send_job(self, group_manager:GroupManager, input_text):
-        self.active_task = WorkerTaskManager(group_manager=group_manager)
+        self.active_task = WorkerTaskManager(group_manager=group_manager, send_callback=group_manager.send)
         try:
             await self.active_task.group_manager.send(message=MessageModel(text="Sending Job to Worker..."))
             await self.send(action=ServerWorkerActionType.CREATE_INTERACTION, content=InputContent(input_text=input_text))
