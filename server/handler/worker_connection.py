@@ -67,7 +67,7 @@ class WorkerConnection(BaseConnection):
     async def event_handler(self, response_model:ResponseModel):
         await self.group_manager.send(message=response_model.message)
 
-        match response_model.action:    
+        match response_model.action:
             case WorkerServerActionType.STREAM_RESPONSE:
                 assert isinstance(response_model.content, ResponseStreamContent)
                 self.group_manager.chat_context.active_interaction.add_response_chunk(response_model.content.response)
