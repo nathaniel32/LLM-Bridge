@@ -18,7 +18,7 @@ class GroupManager:
 
     async def reset_state(self):
         await self.update_group_infos(status=GroupStatus.IDLE)
-        self.chat_context.reset_active_interaction()
+        self.chat_context.close_active_interaction()
         self.worker_connection = None
 
     async def add_client(self, client_connection:"ClientConnection"):

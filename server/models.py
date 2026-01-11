@@ -11,7 +11,7 @@ class ChatContext(BaseModel):
     interaction_history: List[Interaction] = []
     active_interaction: Optional[Interaction] = None
 
-    def reset_active_interaction(self):
+    def close_active_interaction(self):
         self.active_interaction = None
 
     def create_interaction(self, prompt):
