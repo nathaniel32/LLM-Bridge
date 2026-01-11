@@ -31,7 +31,7 @@ class ClientConnection(BaseConnection):
             client_num = len(self.connection_manager.client_connections),
             worker_num = len(self.connection_manager.worker_connections),
             group_num = len(self.connection_manager.group_managers),
-            groups_infos = self.connection_manager._get_groups_infos(),
+            groups_credential = self.connection_manager._get_groups_credential(),
             queue_length = len(self.connection_manager.waiting_groups)
         )
         await self.send(content=client_content)

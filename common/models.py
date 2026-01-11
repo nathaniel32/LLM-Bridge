@@ -68,9 +68,12 @@ class Interaction(BaseModel):
         self.response += chunk
         return self.response
 
-class GroupInfos(BaseModel):
+class GroupCredential(BaseModel):
     id: str
     name: str
+
+class GroupInfos(BaseModel):
+    credential: GroupCredential
     queue_position: int = 0
     status: GroupStatus = GroupStatus.IDLE
 
@@ -89,7 +92,7 @@ class ClientContent(BaseModel):
     client_num: Optional[int] = None
     worker_num: Optional[int] = None
     group_num: Optional[int] = None
-    groups_infos: Optional[List[GroupInfos]] = None
+    groups_credential: Optional[List[GroupCredential]] = None
     queue_length: Optional[int] = None
 
 ###################################################

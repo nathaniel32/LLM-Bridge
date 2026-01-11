@@ -4,7 +4,7 @@ from server.handler.client_connection import ClientConnection
 from typing import List, Optional
 import asyncio
 from server.models import RequestError
-from common.models import ClientContent, MessageModel, StatusType
+from common.models import ClientContent, MessageModel, StatusType, GroupCredential
 
 class ConnectionManager:
     def __init__(self):
@@ -17,11 +17,11 @@ class ConnectionManager:
         self._client_lock = asyncio.Lock()
         self._dispatch_lock = asyncio.Lock()
 
-    def _get_groups_infos(self):
-        return [gm.group_infos for gm in self.group_managers]
+    def _get_groups_credential(self) -> GroupCredential:
+        return [gm.group_infos.credential for gm in self.group_managers]
     
     def get_group_by_id(self, group_id) -> GroupManager:
-        group = next((g for g in self.group_managers if g.group_infos.id == group_id), None)
+        group = next((g for g in self.group_managers if g.group_infos.credential.id == group_id), None)
         if group is None:
             raise RequestError(f"Group with id {group_id} not found")
         return group
@@ -81,7 +81,7 @@ class ConnectionManager:
             self.group_managers.append(manager)
             print("Active Group Manager: ", len(self.group_managers))
         
-        await self.broadcast(content=ClientContent(group_num=len(self.group_managers), groups_infos=self._get_groups_infos()))
+        await self.broadcast(content=ClientContent(group_num=len(self.group_managers), groups_credential=self._get_groups_credential()))
         return manager
     
     # remove group manager
@@ -91,7 +91,7 @@ class ConnectionManager:
                 self.group_managers.remove(manager)
                 print("Group Manager removed: ", len(self.group_managers))
         
-        await self.broadcast(content=ClientContent(group_num=len(self.group_managers), groups_infos=self._get_groups_infos()))
+        await self.broadcast(content=ClientContent(group_num=len(self.group_managers), groups_credential=self._get_groups_credential()))
 
     async def add_worker_connection(self, websocket) -> WorkerConnection:
         async with self._worker_lock:

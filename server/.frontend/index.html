@@ -174,7 +174,7 @@
                             <i class="fas fa-users mr-2"></i>Groups
                         </h2>
                         <span class="text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded-full font-medium">
-                            {{ groupsInfos.length }}
+                            {{ groupsCredential.length }}
                         </span>
                     </div>
                     <button 
@@ -189,8 +189,8 @@
                 <!-- Groups List -->
                 <div class="flex-1 overflow-y-auto p-3">
                     <groups-list
-                        v-if="groupsInfos && groupsInfos.length > 0"
-                        :groups="groupsInfos"
+                        v-if="groupsCredential && groupsCredential.length > 0"
+                        :groups="groupsCredential"
                         :joined-group-id="joinedGroupId"
                         @join="joinGroup"
                         @delete="deleteGroup"
@@ -589,7 +589,7 @@
                 queueLength: null,
                 workerNum: null,
                 groupNum: null,
-                groupsInfos: [],
+                groupsCredential: [],
                 joinedGroupId: null,
                 joinedGroupName: null,
                 joinedGroupStatus: null,
@@ -714,8 +714,8 @@
                     }
 
                     // Update groups list
-                    if (content.groups_infos !== undefined && content.groups_infos !== null) {
-                        this.groupsInfos = content.groups_infos;
+                    if (content.groups_credential !== undefined && content.groups_credential !== null) {
+                        this.groupsCredential = content.groups_credential;
                     }
 
                     // Update joined group information
@@ -723,12 +723,12 @@
                         const groupInfo = content.joined_group_infos;
                         
                         // If group info has id, we're joined to a group
-                        if (groupInfo.id) {
-                            this.joinedGroupId = groupInfo.id;
-                            this.joinedGroupName = groupInfo.name;
+                        if (groupInfo.credential.id) {
+                            this.joinedGroupId = groupInfo.credential.id;
+                            this.joinedGroupName = groupInfo.credential.name;
                             this.joinedGroupStatus = groupInfo.status;
                             this.queuePosition = groupInfo.queue_position;
-                            this.updateURLWithGroupId(groupInfo.id);
+                            this.updateURLWithGroupId(groupInfo.credential.id);
                         } else {
                             // Empty group info means we left the group
                             this.joinedGroupId = null;
