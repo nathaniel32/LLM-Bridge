@@ -60,7 +60,7 @@ class ConnectionManager:
         async with self._dispatch_lock:
             if self.waiting_groups:
                 for worker_connection in self.worker_connections:
-                    if worker_connection.job_event is None:
+                    if worker_connection.active_task is None:
                         group_manager = self.waiting_groups.pop(0)
                         group_manager.worker_connection = worker_connection
                         asyncio.create_task(group_manager.start_job())
