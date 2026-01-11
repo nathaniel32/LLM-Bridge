@@ -54,7 +54,7 @@ class InputContent(BaseModel):
     input_text: Optional[str] = None
 
 class ClientContent(BaseModel):
-    joined_group_id: Optional[str] = None
+    joined_group_infos: Optional[GroupInfos] = None
     interaction: Optional[Interaction] = None
     client_num: Optional[int] = None
     worker_num: Optional[int] = None

@@ -25,14 +25,14 @@ class GroupManager:
 
         self.client_connections.append(client_connection)
         client_connection.group_manager = self
-        await client_connection.send(message=MessageModel(text=f"Joined to {self.group_infos.id}"), content=ClientContent(joined_group_id=self.group_infos.id))
+        await client_connection.send(message=MessageModel(text=f"Joined to {self.group_infos.id}"), content=ClientContent(joined_group_infos=self.group_infos))
         for interaction in self.chat_context.interaction_history:
             await self.update_interaction(interaction=interaction, client_connections=[client_connection])
     
     async def remove_client(self, client_connection:"ClientConnection"):
         self.client_connections.remove(client_connection)
         client_connection.group_manager = None
-        await client_connection.send(message=MessageModel(text=f"Leave from {self.group_infos.id}", status=StatusType.WARNING), content=ClientContent(joined_group_id=""))
+        await client_connection.send(message=MessageModel(text=f"Leave from {self.group_infos.id}", status=StatusType.WARNING), content=ClientContent(joined_group_infos=""))
 
     async def delete_group(self):
         await self.connection_manager.remove_group_manager(self)
