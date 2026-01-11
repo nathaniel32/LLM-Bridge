@@ -191,7 +191,7 @@
                     <groups-list
                         v-if="groupsCredential && groupsCredential.length > 0"
                         :groups="groupsCredential"
-                        :joined-group-id="joinedGroupId"
+                        :joined-group-id="joinedGroupInfo ? joinedGroupInfo.credential.id : null"
                         @join="joinGroup"
                         @delete="deleteGroup"
                     ></groups-list>
@@ -211,17 +211,32 @@
                     class="bg-white border-b border-gray-200 px-4 py-2"
                 >
                     <div class="flex items-center gap-4 text-xs text-gray-600 flex-wrap">
-                        <div v-if="joinedGroupId" class="flex items-center gap-2">
+                        <div v-if="joinedGroupInfo" class="flex items-center gap-2">
                             <i class="fas fa-id-badge text-blue-600"></i>
-                            <span>Group: <strong class="text-gray-900 font-mono">{{ joinedGroupId }}</strong></span>
+                            <span>Group: <strong class="text-gray-900 font-mono">{{ joinedGroupInfo.credential.id }}</strong></span>
                         </div>
-                        <div v-if="joinedGroupName" class="flex items-center gap-2">
+                        <div v-if="joinedGroupInfo" class="flex items-center gap-2">
                             <i class="fas fa-tag text-purple-600"></i>
-                            <span>Name: <strong class="text-gray-900">{{ joinedGroupName }}</strong></span>
+                            <span>Name: <strong class="text-gray-900">{{ joinedGroupInfo.credential.name }}</strong></span>
                         </div>
-                        <div v-if="queuePosition !== null" class="flex items-center gap-2">
+                        <div v-if="joinedGroupInfo && joinedGroupInfo.queue_position > 0" class="flex items-center gap-2">
                             <i class="fas fa-clock text-yellow-600"></i>
-                            <span>Queue Position: <strong class="text-gray-900">{{ queuePosition }}</strong></span>
+                            <span>Queue Position: <strong class="text-gray-900">{{ joinedGroupInfo.queue_position }}</strong></span>
+                        </div>
+                        <div v-if="joinedGroupInfo" class="flex items-center gap-2">
+                            <span 
+                                class="inline-block text-xs px-2.5 py-1 rounded-full font-semibold uppercase tracking-wide"
+                                :class="{
+                                    'bg-gray-100 text-gray-700 border border-gray-200': joinedGroupInfo.status === 'idle',
+                                    'bg-yellow-100 text-yellow-700 border border-yellow-200 animate-pulse-custom': joinedGroupInfo.status === 'processing'
+                                }"
+                            >
+                                <i :class="{
+                                    'fas fa-pause-circle': joinedGroupInfo.status === 'idle',
+                                    'fas fa-spinner fa-spin': joinedGroupInfo.status === 'processing'
+                                }" class="mr-1"></i>
+                                Group {{ joinedGroupInfo.status }}
+                            </span>
                         </div>
                         <div v-if="clientNum !== null" class="flex items-center gap-2">
                             <i class="fas fa-user text-green-600"></i>
@@ -286,18 +301,18 @@
                             <div class="flex gap-2">
                                 <button 
                                     @click="sendMessage"
-                                    :disabled="!messageInput.trim()"
+                                    :disabled="!messageInput.trim() || isGroupProcessing"
                                     class="px-6 py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-all disabled:bg-gray-300 disabled:cursor-not-allowed font-medium shadow-sm hover:shadow-md"
                                 >
                                     <i class="fas fa-paper-plane mr-2"></i>Send
                                 </button>
                                 <button 
-                                    v-if="hasActiveInteraction"
+                                    v-if="isGroupProcessing"
                                     @click="abortJob"
                                     class="px-4 py-3 bg-red-500 text-white rounded-xl hover:bg-red-600 transition-all font-medium shadow-sm"
                                     title="Abort current interaction"
                                 >
-                                    <i class="fas fa-stop"></i>
+                                    <i class="fas fa-stop mr-2"></i>Abort
                                 </button>
                             </div>
                         </div>
@@ -401,7 +416,9 @@
                 >
                     <div class="flex items-start justify-between">
                         <div class="flex-1 min-w-0 pr-2">
-                            <h3 class="font-semibold text-sm text-gray-900 truncate">{{ group.name }}</h3>
+                            <div class="flex items-center gap-2 mb-1">
+                                <h3 class="font-semibold text-sm text-gray-900 truncate">{{ group.name }}</h3>
+                            </div>
                             <p class="text-xs text-gray-500 font-mono truncate">{{ group.id }}</p>
                         </div>
                         
@@ -515,7 +532,7 @@
                                             :class="{
                                                 'bg-blue-100 text-blue-700 border border-blue-200': item.status === 'created',
                                                 'bg-purple-100 text-purple-700 border border-purple-200 animate-pulse-custom': item.status === 'queued',
-                                                'bg-yellow-100 text-yellow-700 border border-yellow-200 animate-pulse-custom': item.status === 'processing',
+                                                'bg-yellow-100 text-yellow-700 border border-yellow-200 animate-pulse-custom': item.status === 'in_progress',
                                                 'bg-green-100 text-green-700 border border-green-200': item.status === 'completed',
                                                 'bg-red-100 text-red-700 border border-red-200': item.status === 'failed',
                                                 'bg-orange-100 text-orange-700 border border-orange-200': item.status === 'aborted',
@@ -573,9 +590,7 @@
                 workerNum: null,
                 groupNum: null,
                 groupsCredential: [],
-                joinedGroupId: null,
-                joinedGroupName: null,
-                joinedGroupStatus: null,
+                joinedGroupInfo: null,
                 heartbeatTimeout: null,
                 sidebarOpen: true,
                 wsConnected: false,
@@ -584,10 +599,13 @@
             },
             computed: {
                 hasActiveConnection() {
-                    return this.joinedGroupId !== null;
+                    return this.joinedGroupInfo !== null;
                 },
                 hasActiveInteraction() {
                     return this.interactions.some(i => i.status === 'processing' || i.status === 'queued');
+                },
+                isGroupProcessing() {
+                    return this.joinedGroupInfo && this.joinedGroupInfo.status === 'processing';
                 }
             },
             watch: {
@@ -696,7 +714,7 @@
                         this.queueLength = content.queue_length;
                     }
 
-                    // Update groups list
+                    // Update groups credentials list
                     if (content.groups_credential !== undefined && content.groups_credential !== null) {
                         this.groupsCredential = content.groups_credential;
                     }
@@ -705,19 +723,13 @@
                     if (content.joined_group_infos !== undefined && content.joined_group_infos !== null) {
                         const groupInfo = content.joined_group_infos;
                         
-                        // If group info has id, we're joined to a group
-                        if (groupInfo.credential.id) {
-                            this.joinedGroupId = groupInfo.credential.id;
-                            this.joinedGroupName = groupInfo.credential.name;
-                            this.joinedGroupStatus = groupInfo.status;
-                            this.queuePosition = groupInfo.queue_position;
+                        // If group info has credential with id, we're joined to a group
+                        if (groupInfo.credential && groupInfo.credential.id) {
+                            this.joinedGroupInfo = groupInfo;
                             this.updateURLWithGroupId(groupInfo.credential.id);
                         } else {
                             // Empty group info means we left the group
-                            this.joinedGroupId = null;
-                            this.joinedGroupName = null;
-                            this.joinedGroupStatus = null;
-                            this.queuePosition = null;
+                            this.joinedGroupInfo = null;
                             this.interactions = [];
                             this.updateURLWithGroupId(null);
                         }
