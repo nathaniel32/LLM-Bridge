@@ -97,6 +97,16 @@ class GroupManager:
         interaction = self.chat_context.delete_interaction(interaction_id=interaction_id)
         await self.update_interaction(interaction=interaction, status=InteractionStatus.DELETED)
 
+    async def job_callback(self, response_model):
+        from server.models import InteractionType
+
+        if self.chat_context.interaction_type == InteractionType.CHAT:
+            self.chat_context.active_interaction.add_response_chunk(response_model.content.response)
+            await self.update_interaction() # stream
+        elif self.chat_context.interaction_type == InteractionType.TITLE:
+            self.chat_context.title_interaction.add_response_chunk(response_model.content.response)
+            await self.update_group_infos(update_credential=True)
+
     async def start_job(self):
         try:
             await self.update_interaction(status=InteractionStatus.PROCESSING)

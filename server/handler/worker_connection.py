@@ -18,11 +18,17 @@ class SendCallback(Protocol):
     ) -> None:
         ...
 
+class StreamResponseCallback(Protocol):
+    async def __call__(
+        self, 
+        response_model: ResponseModel
+    ) -> None:
+        ...
+
 class WorkerTaskManager:
-    def __init__(self, input_text, group_manager, send_callback: SendCallback, stream_response_callback=None):
+    def __init__(self, input_text, send_callback: SendCallback, stream_response_callback: StreamResponseCallback):
         self.job_event = asyncio.Event()
         self.unsuccess_action: Optional[WorkerServerActionType] = None
-        self.group_manager: GroupManager = group_manager
         self.send_callback = send_callback
         self.stream_response_callback = stream_response_callback
         self.action = ServerWorkerActionType.CREATE_INTERACTION
@@ -34,12 +40,7 @@ class WorkerTaskManager:
         match response_model.action:
             case WorkerServerActionType.STREAM_RESPONSE:
                 assert isinstance(response_model.content, ResponseStreamContent)
-                if self.group_manager.chat_context.interaction_type == InteractionType.CHAT:
-                    self.group_manager.chat_context.active_interaction.add_response_chunk(response_model.content.response)
-                    await self.group_manager.update_interaction() # stream
-                elif self.group_manager.chat_context.interaction_type == InteractionType.TITLE:
-                    self.group_manager.chat_context.title_interaction.add_response_chunk(response_model.content.response)
-                    await self.group_manager.update_group_infos(update_credential=True)
+                await self.stream_response_callback(response_model=response_model)
             case WorkerServerActionType.ABORTED:
                 self.worker_unsuccess_action = response_model.action
             case WorkerServerActionType.ERROR:
@@ -62,7 +63,7 @@ class WorkerConnection(BaseConnection):
             await self.active_task.send_callback(message=MessageModel(text="Job abort request sended to Worker"))
 
     async def send_job(self, group_manager:GroupManager, input_text):
-        self.active_task = WorkerTaskManager(input_text=input_text, group_manager=group_manager, send_callback=group_manager.send)
+        self.active_task = WorkerTaskManager(input_text=input_text, send_callback=group_manager.send, stream_response_callback=group_manager.job_callback)
         try:
             await self.active_task.send_callback(message=MessageModel(text="Sending Job to Worker..."))
             await self.send(action=self.active_task.action, content=self.active_task.content)
