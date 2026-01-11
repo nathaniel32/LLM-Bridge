@@ -80,7 +80,7 @@ class ConnectionManager:
     async def add_group_manager(self) -> GroupManager:
         async with self._group_lock:
             manager = GroupManager(self)
-            self.group_managers.append(manager)
+            self.group_managers.insert(0, manager)
             print("Active Group Manager: ", len(self.group_managers))
         
         await self.broadcast(content=ClientContent(group_num=len(self.group_managers), groups_credential=self._get_groups_credential()))
