@@ -44,7 +44,7 @@ class WorkerConnection(BaseConnection):
             except Exception as e:
                 raise Exception(f"Error in Worker: {e}") from e
             finally:
-                #TODO update name if length interaction = 1
+                #TODO update title if length interaction = 1
                 print("INTER LEN: ", len(group_manager.chat_context.interaction_history))
                 print("INTER PROMPT: ", group_manager.chat_context.active_interaction.prompt)
                 self.reset_state()

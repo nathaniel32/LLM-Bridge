@@ -27,7 +27,7 @@ class ClientConnection(BaseConnection):
 
     async def setup_connection(self):
         self.heartbeat = asyncio.create_task(self.heartbeat_task())
-        empty_group_infos = GroupInfos(credential=GroupCredential(id="", name=""))
+        empty_group_infos = GroupInfos(credential=GroupCredential(id="", title=""))
         client_content = ClientContent(
             joined_group_infos = empty_group_infos,
             client_num = len(self.connection_manager.client_connections),

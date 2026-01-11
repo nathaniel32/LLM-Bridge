@@ -70,7 +70,7 @@ class Interaction(BaseModel):
 
 class GroupCredential(BaseModel):
     id: str
-    name: str
+    title: str
 
 class GroupInfos(BaseModel):
     credential: GroupCredential

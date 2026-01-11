@@ -251,7 +251,7 @@
                         </div>
                         <div v-if="joinedGroupInfo" class="flex items-center gap-2">
                             <i class="fas fa-tag text-purple-600"></i>
-                            <span>Name: <strong class="text-gray-900">{{ joinedGroupInfo.credential.name }}</strong></span>
+                            <span>Name: <strong class="text-gray-900">{{ joinedGroupInfo.credential.title }}</strong></span>
                         </div>
                         <div v-if="joinedGroupInfo && joinedGroupInfo.queue_position > 0" class="flex items-center gap-2">
                             <i class="fas fa-clock text-yellow-600"></i>
@@ -435,7 +435,7 @@
                     <div class="flex items-start justify-between">
                         <div class="flex-1 min-w-0 pr-2">
                             <div class="flex items-center gap-2 mb-1">
-                                <h3 class="font-semibold text-sm text-gray-900 truncate">{{ group.name }}</h3>
+                                <h3 class="font-semibold text-sm text-gray-900 truncate">{{ group.title }}</h3>
                             </div>
                             <p class="text-xs text-gray-500 font-mono truncate">{{ group.id }}</p>
                         </div>

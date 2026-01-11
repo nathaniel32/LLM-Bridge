@@ -10,7 +10,7 @@ if TYPE_CHECKING:
 
 class GroupManager:
     def __init__(self, connection_manager:"ConnectionManager"):
-        self.group_infos = GroupInfos(credential=GroupCredential(id=uuid4().hex, name="unnamed"))
+        self.group_infos = GroupInfos(credential=GroupCredential(id=uuid4().hex, title="unnamed"))
         self.connection_manager = connection_manager
         self.client_connections: List[ClientConnection] = []
         self.worker_connection: Optional["WorkerConnection"] = None
@@ -33,7 +33,7 @@ class GroupManager:
     async def remove_client(self, client_connection:"ClientConnection"):
         self.client_connections.remove(client_connection)
         client_connection.group_manager = None
-        empty_group_infos = GroupInfos(credential=GroupCredential(id="", name=""))
+        empty_group_infos = GroupInfos(credential=GroupCredential(id="", title=""))
         await client_connection.send(message=MessageModel(text=f"Leave from {self.group_infos.credential.id}", status=StatusType.WARNING), content=ClientContent(joined_group_infos=empty_group_infos)) # reset joined_group_infos
 
     async def delete_group(self):
