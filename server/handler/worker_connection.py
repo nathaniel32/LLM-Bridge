@@ -19,14 +19,15 @@ class SendCallback(Protocol):
         ...
 
 class WorkerTaskManager:
-    def __init__(self, group_manager, send_callback: SendCallback):
+    def __init__(self, group_manager, send_callback: SendCallback, stream_response_callback=None):
         self.job_event = asyncio.Event()
         self.unsuccess_action: Optional[WorkerServerActionType] = None
         self.group_manager: GroupManager = group_manager
-        self.send_back = send_callback
+        self.send_callback = send_callback
+        self.stream_response_callback = stream_response_callback
 
     async def event_handler(self, response_model:ResponseModel):
-        await self.send_back(message=response_model.message)
+        await self.send_callback(message=response_model.message)
 
         match response_model.action:
             case WorkerServerActionType.STREAM_RESPONSE:
@@ -56,12 +57,12 @@ class WorkerConnection(BaseConnection):
     async def send_abort_request(self):
         if self.active_task:
             await self.send(action=ServerWorkerActionType.ABORT_INTERACTION)
-            await self.active_task.send_back(message=MessageModel(text="Job abort request sended to Worker"))
+            await self.active_task.send_callback(message=MessageModel(text="Job abort request sended to Worker"))
 
     async def send_job(self, group_manager:GroupManager, input_text):
         self.active_task = WorkerTaskManager(group_manager=group_manager, send_callback=group_manager.send)
         try:
-            await self.active_task.send_back(message=MessageModel(text="Sending Job to Worker..."))
+            await self.active_task.send_callback(message=MessageModel(text="Sending Job to Worker..."))
             await self.send(action=ServerWorkerActionType.CREATE_INTERACTION, content=InputContent(input_text=input_text))
             await self.active_task.job_event.wait()
 
@@ -81,7 +82,7 @@ class WorkerConnection(BaseConnection):
         logging.info("Worker disconnected!")
         await self.connection_manager.remove_worker_connection(connection=self)
         if self.active_task:
-            await self.active_task.send_back(message=MessageModel(text="Worker disconnected!", status=StatusType.ERROR))
+            await self.active_task.send_callback(message=MessageModel(text="Worker disconnected!", status=StatusType.ERROR))
             self.worker_unsuccess_action = WorkerServerActionType.ERROR
             self.active_task.job_event.set()
 
