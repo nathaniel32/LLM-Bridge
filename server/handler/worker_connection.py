@@ -1,4 +1,4 @@
-from typing import TYPE_CHECKING, Optional
+from typing import TYPE_CHECKING, Optional, Protocol, Any
 from fastapi import WebSocket
 from common.models import WorkerServerActionType, ServerWorkerActionType, InputContent, ResponseModel, MessageModel, ResponseStreamContent, AbortException, StatusType
 from server.handler.group_manager import GroupManager
@@ -8,8 +8,6 @@ from server.models import InteractionType
 from server.handler.base_connection import BaseConnection
 if TYPE_CHECKING:
     from server.handler.connection_manager import ConnectionManager
-
-from typing import Protocol, Awaitable, Optional, Any
 
 class SendCallback(Protocol):
     async def __call__(
