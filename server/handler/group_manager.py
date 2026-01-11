@@ -10,7 +10,7 @@ if TYPE_CHECKING:
 
 class GroupManager:
     def __init__(self, connection_manager:"ConnectionManager"):
-        self.group_infos = GroupInfos(credential=GroupCredential(id=uuid4().hex, title="unnamed"))
+        self.group_infos = GroupInfos(credential=GroupCredential(id=uuid4().hex, title="New Chat"))
         self.connection_manager = connection_manager
         self.client_connections: List[ClientConnection] = []
         self.worker_connection: Optional["WorkerConnection"] = None
