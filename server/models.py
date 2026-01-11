@@ -67,7 +67,7 @@ class ChatContext(BaseModel):
             {"role": "user", "content": self.active_interaction.prompt}
         ]
         
-        if self.active_interaction.response:
-            messages.append({"role": "assistant", "content": self.active_interaction.response})
+        #if self.active_interaction.response:
+        #    messages.append({"role": "assistant", "content": self.active_interaction.response})
         
         return json.dumps(messages)
